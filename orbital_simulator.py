@@ -1,7 +1,11 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 import catppuccin
 import matplotlib as mpl
-import matplotlib.pyplot as plt
+
 
 #Define constants
 G = 6.67430e-11
@@ -46,7 +50,6 @@ def simulate_orbit(time_period, planet_position, planet_velocity, star_mass, pla
 
     return planet_x, planet_y, planet_velocities, times, energies
 
-# Check conservation of energy
 
 # first of all get the required data from the planets
 star_mass = int(input('Star Mass (Solar Masses): ')) * SOLAR_MASS
@@ -68,22 +71,39 @@ simulate_orbit(time_period,
 
 mpl.style.use(catppuccin.PALETTE.mocha.identifier)
 
+fig, ax = plt.subplots()
 
-plt.plot(planet_x, planet_y, label = 'Orbit')
-plt.scatter(0,0, label = 'Central body', color = 'orange')
+ax.plot(planet_x, planet_y, label = 'Orbit')
+ax.scatter(0,0, label = 'Central body', color = 'orange')
 
-plt.xlabel('x position (m)')
-plt.ylabel('y position (m)')
-plt.axis('equal')
-plt.legend(loc='upper left')
-plt.show()
+ax.set_xlabel('x position (m)')
+ax.set_ylabel('y position (m)')
+ax.axis('equal')
+ax.legend(loc='upper left')
 
-plt.plot(
-    np.array(times) / (DAY_SECONDS * DAYS_PER_YEAR),
-    np.array(energies) - energies[0]
-)
+# plt.plot(
+#     np.array(times) / (DAY_SECONDS * DAYS_PER_YEAR),
+#     np.array(energies) - energies[0]
+# )
+#
+# plt.xlabel('Time (years)')
+# plt.ylabel('Change in Energy (J)')
+# plt.axhline(0, linestyle='--')
+# plt.show()
 
-plt.xlabel('Time (years)')
-plt.ylabel('Change in Energy (J)')
-plt.axhline(0, linestyle='--')
-plt.show()
+# MAKE ENERGY NON-SINUSOIDAL AND IMPLEMENT A GUI, PUT PLOTS SIDE BY SIDE
+
+# Make Tkinter GUI
+
+window = tk.Tk()
+
+window.title('Orbital Simulator')
+
+icon = tk.PhotoImage(master=window,file='orbit_icon.png')
+window.iconphoto(False, icon)
+
+canvas = FigureCanvasTkAgg(fig, master = window)
+canvas.get_tk_widget().pack()
+canvas.draw()
+
+window.mainloop()
