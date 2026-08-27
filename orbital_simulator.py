@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import tkinter as tk
+from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import catppuccin
@@ -91,10 +92,7 @@ ax.legend(loc='upper left')
 # plt.axhline(0, linestyle='--')
 # plt.show()
 
-# MAKE ENERGY NON-SINUSOIDAL AND IMPLEMENT A GUI, PUT PLOTS SIDE BY SIDE
-
 # Make Tkinter GUI
-
 window = tk.Tk()
 
 window.title('Orbital Simulator')
@@ -102,8 +100,37 @@ window.title('Orbital Simulator')
 icon = tk.PhotoImage(master=window,file='orbit_icon.png')
 window.iconphoto(False, icon)
 
-canvas = FigureCanvasTkAgg(fig, master = window)
+window.geometry('600x600')
+window.minsize(600,600)
+
+#layout widgets
+menu_frame = ttk.Frame(window)
+main_frame = ttk.Frame(window)
+
+menu_frame.place(x = 0, y = 0, relwidth=0.3, relheight= 1)
+main_frame.place(relx=0.3, y = 0, relwidth = 0.7, relheight = 1)
+
+ttk.Label(main_frame, background = 'blue').pack(expand= True, fill = 'both')
+
+menu_slider1 = ttk.Scale(menu_frame)
+menu_slider2 = ttk.Scale(menu_frame)
+menu_slider3 = ttk.Scale(menu_frame)
+menu_slider4 = ttk.Scale(menu_frame)
+
+menu_frame.columnconfigure(0, weight = 1)
+menu_frame.rowconfigure((0,1,2,3), weight = 1)
+
+menu_slider1.grid(row = 0, column = 0)
+menu_slider2.grid(row = 1, column = 0)
+menu_slider3.grid(row = 2, column = 0)
+menu_slider4.grid(row = 3, column = 0)
+
+canvas = FigureCanvasTkAgg(fig, master = main_frame)
 canvas.get_tk_widget().pack()
 canvas.draw()
 
 window.mainloop()
+
+# MAKE GRAPH READ SLIDER VALUE IN ORDER TO UPDATE ORBIT, ADD ENERGY PLOT, MAKE GUI LOOK NICE
+# USE A BETTER MODEL TO FIND ORBIT ('INTEGRATION') HAS TOO MANY STEPS AND LEADS TO ENERGY DRIFT
+# IF WE CAN GET THE ORBIT TO SHOW CONSERVATION OF ENERGY WE HAVE A GOOD MODEL
