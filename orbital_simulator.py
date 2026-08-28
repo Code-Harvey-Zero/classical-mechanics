@@ -22,16 +22,19 @@ EARTH_MASS = 5.9722e24
 # Define functions
 def update_star_mass(value):
     my_label_1.configure(text=f"{float(value):.2f}")
+    update_simulation()
 
 def update_planet_mass(value):
     my_label_2.configure(text=f"{float(value):.2f}")
+    update_simulation()
 
 def update_planet_position(value):
     my_label_3.configure(text=f"{float(value):.2f}")
+    update_simulation()
 
 def update_planet_velocity(value):
     my_label_4.configure(text=f"{float(value):.2f}")
-
+    update_simulation()
 
 def calculate_energy(planet_mass, star_mass, radius, planet_velocity):
     potential_energy = (- G * star_mass * planet_mass) / radius
@@ -68,53 +71,52 @@ def simulate_orbit(time_period, planet_position, planet_velocity, star_mass, pla
     return planet_x, planet_y, planet_velocities, times, energies
 
 
-# first of all get the required data from the planets
-star_mass = int(input('Star Mass (Solar Masses): ')) * SOLAR_MASS
-planet_mass = int(input('Star Mass (Earth Masses): ')) * EARTH_MASS
+def update_simulation():
+    # first of all get the required data from the planets FROM SLIDERS
+    star_mass = menu_slider_1.get() * SOLAR_MASS
+    planet_mass = menu_slider_2.get() * EARTH_MASS
 
-pos_input = input('Planet Initial Position (x, y) (AU): ')
-planet_position = np.array([float(i) for i in pos_input.split(',')]) * AU
+    planet_position = np.array([menu_slider_3.get(), 0]) * AU
+    planet_velocity = np.array([0, menu_slider_4.get()]) * 1_000
 
-vel_input = input('Planet Initial Velocity (x, y) (km/s): ')
-planet_velocity = np.array([float(i) for i in vel_input.split(',')]) * 1_000
+    time_period = 1
 
-time_period = int(input('Orbit Period (years): '))
+    planet_x, planet_y, planet_velocities, times, energies = simulate_orbit(
+        time_period,
+        planet_position,
+        planet_velocity,
+        star_mass,
+        planet_mass
+    )
 
 
-planet_x, planet_y, planet_velocities, times, energies = simulate_orbit(
-    time_period,
-    planet_position,
-    planet_velocity,
-    star_mass,
-    planet_mass
+
+    ax.clear()
+
+    ax.plot(planet_x, planet_y, label = 'Orbit')
+    ax.scatter(0,0, label = 'Central body', color = 'orange')
+
+    ax.set_xlabel('x position (m)')
+    ax.set_ylabel('y position (m)')
+    ax.axis('equal')
+    ax.legend(loc='upper left')
+
+    canvas.draw()
+
+
+plt.plot(
+    np.array(times) / (DAY_SECONDS * DAYS_PER_YEAR),
+    np.array(energies) - energies[0]
 )
 
-
-
-mpl.style.use(catppuccin.PALETTE.mocha.identifier)
-
-fig, ax = plt.subplots()
-
-ax.plot(planet_x, planet_y, label = 'Orbit')
-ax.scatter(0,0, label = 'Central body', color = 'orange')
-
-ax.set_xlabel('x position (m)')
-ax.set_ylabel('y position (m)')
-ax.axis('equal')
-ax.legend(loc='upper left')
-
-
-# plt.plot(
-#     np.array(times) / (DAY_SECONDS * DAYS_PER_YEAR),
-#     np.array(energies) - energies[0]
-# )
-#
-# plt.xlabel('Time (years)')
-# plt.ylabel('Change in Energy (J)')
-# plt.axhline(0, linestyle='--')
-# plt.show()
+plt.xlabel('Time (years)')
+plt.ylabel('Change in Energy (J)')
+plt.axhline(0, linestyle='--')
+plt.show()
 
 # Make Tkinter GUI
+mpl.style.use(catppuccin.PALETTE.mocha.identifier)
+
 window = tk.Tk()
 
 window.title('Orbital Simulator')
@@ -135,15 +137,20 @@ main_frame.place(relx=0.3, y = 0, relwidth = 0.7, relheight = 1)
 ttk.Label(main_frame, background = 'white').pack(expand= True, fill = 'both')
 
 
-menu_slider_1 = ctk.CTkSlider(menu_frame, from_=0, to=100, command=update_star_mass, number_of_steps=1000)
-menu_slider_2 = ctk.CTkSlider(menu_frame, from_=0, to=100, command=update_planet_mass, number_of_steps=1000)
-menu_slider_3 = ctk.CTkSlider(menu_frame, from_=0, to=100, command=update_planet_position, number_of_steps=1000)
+menu_slider_1 = ctk.CTkSlider(menu_frame, from_=0.1, to=5, command=update_star_mass, number_of_steps=990)
+menu_slider_2 = ctk.CTkSlider(menu_frame, from_=0.1, to=10, command=update_planet_mass, number_of_steps=490)
+menu_slider_3 = ctk.CTkSlider(menu_frame, from_=0.1, to=5, command=update_planet_position, number_of_steps=990)
 menu_slider_4 = ctk.CTkSlider(menu_frame, from_=0, to=100, command=update_planet_velocity, number_of_steps=1000)
 
-my_label_1 = ctk.CTkLabel(menu_frame, text=menu_slider_1.get(), font=('Helvetica', 18), text_color='black')
-my_label_2 = ctk.CTkLabel(menu_frame, text=menu_slider_2.get(), font=('Helvetica', 18), text_color='black')
-my_label_3 = ctk.CTkLabel(menu_frame, text=menu_slider_3.get(), font=('Helvetica', 18), text_color='black')
-my_label_4 = ctk.CTkLabel(menu_frame, text=menu_slider_4.get(), font=('Helvetica', 18), text_color='black')
+menu_slider_1.set(1)
+menu_slider_2.set(1)
+menu_slider_3.set(1)
+menu_slider_4.set(30)
+
+my_label_1 = ctk.CTkLabel(menu_frame, text=f'{menu_slider_1.get():.2f}', font=('Helvetica', 18), text_color='black')
+my_label_2 = ctk.CTkLabel(menu_frame, text=f'{menu_slider_2.get():.2f}', font=('Helvetica', 18), text_color='black')
+my_label_3 = ctk.CTkLabel(menu_frame, text=f'{menu_slider_3.get():.2f}', font=('Helvetica', 18), text_color='black')
+my_label_4 = ctk.CTkLabel(menu_frame, text=f'{menu_slider_4.get():.2f}', font=('Helvetica', 18), text_color='black')
 
 menu_frame.columnconfigure(0, weight = 1)
 menu_frame.rowconfigure((0,1,2,3,4,5,6,7), weight = 1)
@@ -158,12 +165,18 @@ my_label_2.grid(row=3,column=0)
 my_label_3.grid(row=5,column=0)
 my_label_4.grid(row=7,column=0)
 
+fig, ax = plt.subplots()
+
 canvas = FigureCanvasTkAgg(fig, master = main_frame)
 canvas.get_tk_widget().pack()
 canvas.draw()
+
+update_simulation()
 
 window.mainloop()
 
 # MAKE GRAPH READ SLIDER VALUE IN ORDER TO UPDATE ORBIT, ADD ENERGY PLOT, MAKE GUI LOOK NICE
 # USE A BETTER MODEL TO FIND ORBIT ('INTEGRATION') HAS TOO MANY STEPS AND LEADS TO ENERGY DRIFT
 # IF WE CAN GET THE ORBIT TO SHOW CONSERVATION OF ENERGY WE HAVE A GOOD MODEL
+
+#LABEL, BIND SLIDER TO INPUT FIELD, SIZE GRAPH SO IT OCCUPIES SPACE OF SCREEN
