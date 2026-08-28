@@ -2,10 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import ttk
+import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import catppuccin
 import matplotlib as mpl
+
 
 
 #Define constants
@@ -18,6 +20,19 @@ STEPS_PER_DAY = 4
 EARTH_MASS = 5.9722e24
 
 # Define functions
+def update_star_mass(value):
+    my_label_1.configure(text=f"{float(value):.2f}")
+
+def update_planet_mass(value):
+    my_label_2.configure(text=f"{float(value):.2f}")
+
+def update_planet_position(value):
+    my_label_3.configure(text=f"{float(value):.2f}")
+
+def update_planet_velocity(value):
+    my_label_4.configure(text=f"{float(value):.2f}")
+
+
 def calculate_energy(planet_mass, star_mass, radius, planet_velocity):
     potential_energy = (- G * star_mass * planet_mass) / radius
     planet_speed = np.linalg.norm(planet_velocity)
@@ -27,6 +42,7 @@ def calculate_energy(planet_mass, star_mass, radius, planet_velocity):
 
 
 def simulate_orbit(time_period, planet_position, planet_velocity, star_mass, planet_mass):
+    planet_x, planet_y, planet_velocities, times, energies = [], [], [], [], []
     for i in range(int(time_period * DAYS_PER_YEAR * STEPS_PER_DAY)): # Computes in quarter days
         planet_x.append(planet_position[0])
         planet_y.append(planet_position[1])
@@ -63,12 +79,17 @@ vel_input = input('Planet Initial Velocity (x, y) (km/s): ')
 planet_velocity = np.array([float(i) for i in vel_input.split(',')]) * 1_000
 
 time_period = int(input('Orbit Period (years): '))
-planet_x, planet_y, planet_velocities, times, energies = [], [], [], [], []
 
-simulate_orbit(time_period,
-               planet_position,
-               planet_velocity,
-               star_mass, planet_mass)
+
+planet_x, planet_y, planet_velocities, times, energies = simulate_orbit(
+    time_period,
+    planet_position,
+    planet_velocity,
+    star_mass,
+    planet_mass
+)
+
+
 
 mpl.style.use(catppuccin.PALETTE.mocha.identifier)
 
@@ -81,6 +102,7 @@ ax.set_xlabel('x position (m)')
 ax.set_ylabel('y position (m)')
 ax.axis('equal')
 ax.legend(loc='upper left')
+
 
 # plt.plot(
 #     np.array(times) / (DAY_SECONDS * DAYS_PER_YEAR),
@@ -97,7 +119,7 @@ window = tk.Tk()
 
 window.title('Orbital Simulator')
 
-icon = tk.PhotoImage(master=window,file='orbit_icon.png')
+icon = tk.PhotoImage(master=window, file='orbit_icon.png')
 window.iconphoto(False, icon)
 
 window.geometry('600x600')
@@ -110,20 +132,31 @@ main_frame = ttk.Frame(window)
 menu_frame.place(x = 0, y = 0, relwidth=0.3, relheight= 1)
 main_frame.place(relx=0.3, y = 0, relwidth = 0.7, relheight = 1)
 
-ttk.Label(main_frame, background = 'blue').pack(expand= True, fill = 'both')
+ttk.Label(main_frame, background = 'white').pack(expand= True, fill = 'both')
 
-menu_slider1 = ttk.Scale(menu_frame)
-menu_slider2 = ttk.Scale(menu_frame)
-menu_slider3 = ttk.Scale(menu_frame)
-menu_slider4 = ttk.Scale(menu_frame)
+
+menu_slider_1 = ctk.CTkSlider(menu_frame, from_=0, to=100, command=update_star_mass, number_of_steps=1000)
+menu_slider_2 = ctk.CTkSlider(menu_frame, from_=0, to=100, command=update_planet_mass, number_of_steps=1000)
+menu_slider_3 = ctk.CTkSlider(menu_frame, from_=0, to=100, command=update_planet_position, number_of_steps=1000)
+menu_slider_4 = ctk.CTkSlider(menu_frame, from_=0, to=100, command=update_planet_velocity, number_of_steps=1000)
+
+my_label_1 = ctk.CTkLabel(menu_frame, text=menu_slider_1.get(), font=('Helvetica', 18), text_color='black')
+my_label_2 = ctk.CTkLabel(menu_frame, text=menu_slider_2.get(), font=('Helvetica', 18), text_color='black')
+my_label_3 = ctk.CTkLabel(menu_frame, text=menu_slider_3.get(), font=('Helvetica', 18), text_color='black')
+my_label_4 = ctk.CTkLabel(menu_frame, text=menu_slider_4.get(), font=('Helvetica', 18), text_color='black')
 
 menu_frame.columnconfigure(0, weight = 1)
-menu_frame.rowconfigure((0,1,2,3), weight = 1)
+menu_frame.rowconfigure((0,1,2,3,4,5,6,7), weight = 1)
 
-menu_slider1.grid(row = 0, column = 0)
-menu_slider2.grid(row = 1, column = 0)
-menu_slider3.grid(row = 2, column = 0)
-menu_slider4.grid(row = 3, column = 0)
+menu_slider_1.grid(row = 0, column = 0)
+menu_slider_2.grid(row = 2, column = 0)
+menu_slider_3.grid(row = 4, column = 0)
+menu_slider_4.grid(row = 6, column = 0)
+
+my_label_1.grid(row=1,column=0)
+my_label_2.grid(row=3,column=0)
+my_label_3.grid(row=5,column=0)
+my_label_4.grid(row=7,column=0)
 
 canvas = FigureCanvasTkAgg(fig, master = main_frame)
 canvas.get_tk_widget().pack()
