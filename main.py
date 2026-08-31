@@ -1,4 +1,5 @@
 import numpy as np
+import physics
 import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import ttk
@@ -7,67 +8,19 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import catppuccin
 import matplotlib as mpl
-from mpl_toolkits import mplot3d
-
-
-
-#Define constants
-G = 6.67430e-11
-SOLAR_MASS = 1.989e30
-AU = 1.496e11
-DAY_SECONDS = 86400
-DAYS_PER_YEAR = 365.25
-STEPS_PER_DAY = 4
-EARTH_MASS = 5.9722e24
-
-# Define functions
-def calculate_energy(planet_mass, star_mass, radius, planet_velocity):
-    potential_energy = (- G * star_mass * planet_mass) / radius
-    planet_speed = np.linalg.norm(planet_velocity)
-    kinetic_energy = 0.5 * planet_mass * (planet_speed ** 2)
-    total_energy = kinetic_energy + potential_energy
-    return total_energy
-
-
-def simulate_orbit(time_period, planet_position, planet_velocity, star_mass, planet_mass):
-    planet_x, planet_y, planet_velocities, times, energies = [], [], [], [], []
-    dt = DAY_SECONDS / STEPS_PER_DAY
-    for i in range(int(time_period * DAYS_PER_YEAR * STEPS_PER_DAY)): # Computes in quarter days
-        planet_x.append(planet_position[0])
-        planet_y.append(planet_position[1])
-        planet_velocities.append(np.linalg.norm(planet_velocity))
-        times.append(i * dt)
-
-        radius = np.linalg.norm(planet_position)
-        scalar_acceleration = (star_mass * G / (radius ** 2))
-
-        # now find the negative unit vector of the radius squared in order to find the vector acceleration
-
-        unit_radius = - planet_position / (radius)
-        vector_acceleration = scalar_acceleration * unit_radius
-
-        energy = calculate_energy(planet_mass, star_mass, radius, planet_velocity)
-        energies.append(energy)
-        # NOW WE NEED TO FIND THE NEW POSITION AND VELOCITY VECTOR AND MAP THEM INTO VARIABLES AND SPLIT THEM INTO COMPONENT
-
-        planet_velocity += vector_acceleration * dt
-        planet_position += planet_velocity * dt
-
-
-    return np.array(planet_x), np.array(planet_y), planet_velocities, times, energies
 
 
 def update_simulation():
     # first of all get the required data from the planets FROM SLIDERS
-    star_mass = star_mass_slider.get() * SOLAR_MASS
-    planet_mass = planet_mass_slider.get() * EARTH_MASS
+    star_mass = star_mass_slider.get() * physics.SOLAR_MASS
+    planet_mass = planet_mass_slider.get() * physics.SOLAR_MASS
 
-    planet_position = np.array([planet_position_slider.get(), 0]) * AU
+    planet_position = np.array([planet_position_slider.get(), 0]) * physics.AU
     planet_velocity = np.array([0, planet_velocity_slider.get()]) * 1_000
 
     time_period = time_period_slider.get()
 
-    planet_x, planet_y, planet_velocities, times, energies = simulate_orbit(
+    planet_x, planet_y, planet_velocities, times, energies = physics.simulate_orbit(
         time_period,
         planet_position,
         planet_velocity,
@@ -80,7 +33,7 @@ def update_simulation():
     ax1.clear()
     ax2.clear()
 
-    ax1.plot(planet_x / AU, planet_y / AU, label = 'Orbit')
+    ax1.plot(planet_x / physics.AU, planet_y / physics.AU, label ='Orbit')
     ax1.scatter(0,0, label = 'Central body', color = 'orange')
 
     ax1.set_xlabel('x position (AU)')
@@ -91,7 +44,7 @@ def update_simulation():
 
 
     ax2.plot(
-        np.array(times) / (DAY_SECONDS * DAYS_PER_YEAR),
+        np.array(times) / (physics.DAY_SECONDS * physics.DAYS_PER_YEAR),
         np.array(energies)
     )
 
@@ -100,8 +53,6 @@ def update_simulation():
     ax2.set_title('Total Energy vs Time')
 
     canvas.draw_idle()
-
-
 
 
 # Make Tkinter GUI
@@ -206,13 +157,3 @@ canvas.get_tk_widget().pack(fill='both', expand=True)
 update_simulation()
 
 window.mainloop()
-
-# USE A BETTER MODEL TO FIND ORBIT ('INTEGRATION') HAS TOO MANY STEPS AND LEADS TO ENERGY DRIFT
-# IF WE CAN GET THE ORBIT TO SHOW CONSERVATION OF ENERGY WE HAVE A GOOD MODEL
-
-#FORMAT ALL GRIDS AND WIDGETS BETTER
-
-#CREATE NEW FILE STRUCTURE
-#Move physics into physics.py
-#Move simulate orbit into simulation.py
-#main.py only responsible for starting application 
