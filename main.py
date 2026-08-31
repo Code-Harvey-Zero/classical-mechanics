@@ -20,13 +20,13 @@ def closing():
 
 def update_simulation():
     # first of all get the required data from the planets FROM SLIDERS
-    star_mass = star_mass_slider.get() * physics.SOLAR_MASS
-    planet_mass = planet_mass_slider.get() * physics.SOLAR_MASS
+    star_mass = sliders['star_mass'].get() * physics.SOLAR_MASS
+    planet_mass = sliders['planet_mass'].get() * physics.SOLAR_MASS
 
-    planet_position = np.array([planet_position_slider.get(), 0]) * physics.AU
-    planet_velocity = np.array([0, planet_velocity_slider.get()]) * 1_000
+    planet_position = np.array([sliders['planet_position'].get(), 0]) * physics.AU
+    planet_velocity = np.array([0, sliders['planet_velocity'].get()]) * 1_000
 
-    time_period = time_period_slider.get()
+    time_period = sliders['time_period'].get()
 
     planet_x, planet_y, planet_velocities, times, energies = physics.simulate_orbit(
         time_period,
@@ -85,75 +85,45 @@ main_frame = ttk.Frame(window)
 menu_frame.place(x = 0, y = 0, relwidth=0.3, relheight= 1)
 main_frame.place(relx=0.3, y = 0, relwidth = 0.7, relheight = 1)
 
-star_mass_var = tk.DoubleVar(value=1.00)
-star_mass_var.trace_add("write", lambda *args: update_simulation())
-
-planet_mass_var = tk.DoubleVar(value=1.00)
-planet_mass_var.trace_add("write", lambda *args: update_simulation())
-
-planet_position_var = tk.DoubleVar(value=1.00)
-planet_position_var.trace_add("write", lambda *args: update_simulation())
-
-planet_velocity_var = tk.DoubleVar(value=30.00)
-planet_velocity_var.trace_add("write", lambda *args: update_simulation())
-
-time_period_var = tk.IntVar(value=1)
-time_period_var.trace_add("write", lambda *args: update_simulation())
-
-star_mass_slider = ctk.CTkSlider(menu_frame, from_=0.1, to=5, variable=star_mass_var, number_of_steps=1000)
-planet_mass_slider = ctk.CTkSlider(menu_frame, from_=0.1, to=10, variable=planet_mass_var, number_of_steps=1000)
-planet_position_slider = ctk.CTkSlider(menu_frame, from_=0.1, to=5, variable=planet_position_var, number_of_steps=1000)
-planet_velocity_slider = ctk.CTkSlider(menu_frame, from_=0, to=100, variable=planet_velocity_var, number_of_steps=1000)
-time_period_slider = ctk.CTkSlider(menu_frame, from_=1, to=5, variable=time_period_var, number_of_steps=100)
-
-star_mass_slider.set(1)
-planet_mass_slider.set(1)
-planet_position_slider.set(1)
-planet_velocity_slider.set(30)
-time_period_slider.set(1)
-
-star_mass_box = tk.Entry(menu_frame, width=5, textvariable=star_mass_var)
-star_mass_box.bind("<Return>", lambda event: menu_slider_1.set(to=star_mass_var.get()))
-
-planet_mass_box = tk.Entry(menu_frame, width=5, textvariable=planet_mass_var)
-planet_mass_box.bind("<Return>", lambda event: menu_slider_2.set(to=planet_mass_var.get()))
-
-planet_position_box = tk.Entry(menu_frame, width=5, textvariable=planet_position_var)
-planet_position_box.bind("<Return>", lambda event: menu_slider_3.set(to=planet_position_var.get()))
-
-planet_velocity_box = tk.Entry(menu_frame, width=5, textvariable=planet_velocity_var)
-planet_velocity_box.bind("<Return>", lambda event: menu_slider_4.set(to=planet_velocity_var.get()))
-
-time_period_box = tk.Entry(menu_frame, width=5, textvariable=time_period_var)
-time_period_box.bind("<Return>", lambda event: menu_slider_5.set(to=time_period_var.get()))
-
-star_mass_label = tk.Label(menu_frame, text='Star Mass (Solar Masses):')
-planet_mass_label = tk.Label(menu_frame, text='Planet Mass (Earth Masses):')
-planet_position_label = tk.Label(menu_frame, text='Planet x Position (AU):')
-planet_velocity_label = tk.Label(menu_frame, text='Planet y Velocity (km/s):')
-time_period_label = tk.Label(menu_frame, text='Time Period (years):')
-
 menu_frame.columnconfigure((0,1), weight = 1)
 menu_frame.rowconfigure((0,1,2,3,4,5,6,7, 8, 9), weight = 1)
 
-star_mass_slider.grid(row = 1, column = 0, sticky = 'ne')
-planet_mass_slider.grid(row = 3, column = 0, sticky = 'ne')
-planet_position_slider.grid(row = 5, column = 0, sticky = 'ne')
-planet_velocity_slider.grid(row = 7, column = 0, sticky = 'ne')
-time_period_slider.grid(row = 9, column = 0, sticky = 'ne')
+variable_configurations = [
+    {'name':'star_mass', 'label':'Star Mass (Solar Masses):', 'min': 0.1, 'max': 5 , 'default': 1, 'step':1000},
+    {'name':'planet_mass', 'label':'Planet Mass (Earth Masses):', 'min': 0.1, 'max': 10, 'default': 1 , 'step':1000},
+    {'name':'planet_position', 'label':'Planet x Position (AU):', 'min': 0.1, 'max': 5, 'default': 1 , 'step':1000},
+    {'name':'planet_velocity', 'label':'Planet y Velocity (km/s):', 'min': 0 , 'max': 100, 'default': 30, 'step':1000},
+    {'name':'time_period', 'label':'Time Period (years):', 'min':1 , 'max':5 , 'default':1 , 'step':100}]
 
+variables, sliders = {}, {}
 
-star_mass_label.grid(row=0, sticky = 's')
-planet_mass_label.grid(row=2, sticky = 's')
-planet_position_label.grid(row=4, sticky = 's')
-planet_velocity_label.grid(row=6, sticky = 's')
-time_period_label.grid(row=8, sticky = 's')
+for configure in variable_configurations:
 
-star_mass_box.grid(row=1,column=1, sticky = 'nw')
-planet_mass_box.grid(row=3,column=1, sticky = 'nw')
-planet_position_box.grid(row=5,column=1, sticky = 'nw')
-planet_velocity_box.grid(row=7,column=1, sticky = 'nw')
-time_period_box.grid(row=9,column=1, sticky = 'nw')
+    var = tk.DoubleVar(value=configure['default'])
+    variables[configure['name']] = var
+
+    sld = ctk.CTkSlider(menu_frame, from_=configure['min'], to=configure['max'], variable=var,
+                        number_of_steps=configure['step'])
+    sld.set(configure['default'])
+    sliders[configure['name']] = sld
+
+for i, configure in enumerate(variable_configurations):
+    label_row = i * 2
+    control_row = i * 2 + 1
+
+    lbl = tk.Label(menu_frame, text=configure['label'])
+    lbl.grid(row=label_row, column=0, sticky='s')
+
+    sld = sliders[configure['name']]
+    sld.grid(row=control_row, column=0, sticky = 'ne')
+
+    var = variables[configure['name']]
+    box = tk.Entry(menu_frame, width=5, textvariable=var)
+    box.grid(row=control_row, column=1, stick = 'nw')
+    box.bind("<Return>", lambda event, name=configure["name"]: sliders[name].set(variables[name].get()))
+
+    var.trace_add("write", lambda *args: update_simulation())
+
 
 fig = plt.figure()
 fig.tight_layout()
@@ -169,3 +139,8 @@ update_simulation()
 window.protocol('WM_DELETE_WINDOW', closing)
 
 window.mainloop()
+
+# USE A BETTER MODEL TO FIND ORBIT ('INTEGRATION') HAS TOO MANY STEPS AND LEADS TO ENERGY DRIFT
+# IF WE CAN GET THE ORBIT TO SHOW CONSERVATION OF ENERGY WE HAVE A GOOD MODEL
+
+#FORMAT ALL GRIDS AND WIDGETS BETTER
