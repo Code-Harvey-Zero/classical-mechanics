@@ -9,6 +9,14 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import catppuccin
 import matplotlib as mpl
 
+def closing():
+    window.quit()
+    window.destroy()
+    try:
+        for after_id in window.tk.eval('after info').split():
+            window.after_cancel(after_id)
+    except:
+        pass
 
 def update_simulation():
     # first of all get the required data from the planets FROM SLIDERS
@@ -29,9 +37,11 @@ def update_simulation():
     )
 
 
-
-    ax1.clear()
-    ax2.clear()
+    try:
+        ax1.clear()
+        ax2.clear()
+    except:
+        return
 
     ax1.plot(planet_x / physics.AU, planet_y / physics.AU, label ='Orbit')
     ax1.scatter(0,0, label = 'Central body', color = 'orange')
@@ -155,5 +165,7 @@ canvas = FigureCanvasTkAgg(fig, master = main_frame)
 canvas.get_tk_widget().pack(fill='both', expand=True)
 
 update_simulation()
+
+window.protocol('WM_DELETE_WINDOW', closing)
 
 window.mainloop()
