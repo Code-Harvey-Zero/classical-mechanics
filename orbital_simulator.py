@@ -59,13 +59,13 @@ def simulate_orbit(time_period, planet_position, planet_velocity, star_mass, pla
 
 def update_simulation():
     # first of all get the required data from the planets FROM SLIDERS
-    star_mass = menu_slider_1.get() * SOLAR_MASS
-    planet_mass = menu_slider_2.get() * EARTH_MASS
+    star_mass = star_mass_slider.get() * SOLAR_MASS
+    planet_mass = planet_mass_slider.get() * EARTH_MASS
 
-    planet_position = np.array([menu_slider_3.get(), 0]) * AU
-    planet_velocity = np.array([0, menu_slider_4.get()]) * 1_000
+    planet_position = np.array([planet_position_slider.get(), 0]) * AU
+    planet_velocity = np.array([0, planet_velocity_slider.get()]) * 1_000
 
-    time_period = menu_slider_5.get()
+    time_period = time_period_slider.get()
 
     planet_x, planet_y, planet_velocities, times, energies = simulate_orbit(
         time_period,
@@ -139,65 +139,60 @@ planet_velocity_var.trace_add("write", lambda *args: update_simulation())
 time_period_var = tk.IntVar(value=1)
 time_period_var.trace_add("write", lambda *args: update_simulation())
 
-menu_slider_1 = ctk.CTkSlider(menu_frame, from_=0.1, to=5, variable=star_mass_var, number_of_steps=1000)
-menu_slider_2 = ctk.CTkSlider(menu_frame, from_=0.1, to=10, variable=planet_mass_var, number_of_steps=1000)
-menu_slider_3 = ctk.CTkSlider(menu_frame, from_=0.1, to=5, variable=planet_position_var, number_of_steps=1000)
-menu_slider_4 = ctk.CTkSlider(menu_frame, from_=0, to=100, variable=planet_velocity_var, number_of_steps=1000)
-menu_slider_5 = ctk.CTkSlider(menu_frame, from_=1, to=5, variable=time_period_var, number_of_steps=100)
+star_mass_slider = ctk.CTkSlider(menu_frame, from_=0.1, to=5, variable=star_mass_var, number_of_steps=1000)
+planet_mass_slider = ctk.CTkSlider(menu_frame, from_=0.1, to=10, variable=planet_mass_var, number_of_steps=1000)
+planet_position_slider = ctk.CTkSlider(menu_frame, from_=0.1, to=5, variable=planet_position_var, number_of_steps=1000)
+planet_velocity_slider = ctk.CTkSlider(menu_frame, from_=0, to=100, variable=planet_velocity_var, number_of_steps=1000)
+time_period_slider = ctk.CTkSlider(menu_frame, from_=1, to=5, variable=time_period_var, number_of_steps=100)
 
-menu_slider_1.set(1)
-menu_slider_2.set(1)
-menu_slider_3.set(1)
-menu_slider_4.set(30)
-menu_slider_5.set(1)
+star_mass_slider.set(1)
+planet_mass_slider.set(1)
+planet_position_slider.set(1)
+planet_velocity_slider.set(30)
+time_period_slider.set(1)
 
+star_mass_box = tk.Entry(menu_frame, width=5, textvariable=star_mass_var)
+star_mass_box.bind("<Return>", lambda event: menu_slider_1.set(to=star_mass_var.get()))
 
-entry_box_1 = tk.Entry(menu_frame, width=5, textvariable=star_mass_var)
-entry_box_1.bind("<Return>", lambda event: menu_slider_1.set(to=star_mass_var.get()))
+planet_mass_box = tk.Entry(menu_frame, width=5, textvariable=planet_mass_var)
+planet_mass_box.bind("<Return>", lambda event: menu_slider_2.set(to=planet_mass_var.get()))
 
-entry_box_2 = tk.Entry(menu_frame, width=5, textvariable=planet_mass_var)
-entry_box_2.bind("<Return>", lambda event: menu_slider_2.set(to=planet_mass_var.get()))
+planet_position_box = tk.Entry(menu_frame, width=5, textvariable=planet_position_var)
+planet_position_box.bind("<Return>", lambda event: menu_slider_3.set(to=planet_position_var.get()))
 
-entry_box_3 = tk.Entry(menu_frame, width=5, textvariable=planet_position_var)
-entry_box_3.bind("<Return>", lambda event: menu_slider_3.set(to=planet_position_var.get()))
+planet_velocity_box = tk.Entry(menu_frame, width=5, textvariable=planet_velocity_var)
+planet_velocity_box.bind("<Return>", lambda event: menu_slider_4.set(to=planet_velocity_var.get()))
 
-entry_box_4 = tk.Entry(menu_frame, width=5, textvariable=planet_velocity_var)
-entry_box_4.bind("<Return>", lambda event: menu_slider_4.set(to=planet_velocity_var.get()))
+time_period_box = tk.Entry(menu_frame, width=5, textvariable=time_period_var)
+time_period_box.bind("<Return>", lambda event: menu_slider_5.set(to=time_period_var.get()))
 
-entry_box_5 = tk.Entry(menu_frame, width=5, textvariable=time_period_var)
-entry_box_5.bind("<Return>", lambda event: menu_slider_5.set(to=time_period_var.get()))
-
-label_1 = tk.Label(menu_frame, text='Star Mass (Solar Masses):')
-label_2 = tk.Label(menu_frame, text='Planet Mass (Earth Masses):')
-label_3 = tk.Label(menu_frame, text='Planet x Position (AU):')
-label_4 = tk.Label(menu_frame, text='Planet y Velocity (km/s):')
-label_5 = tk.Label(menu_frame, text='Time Period (years):')
+star_mass_label = tk.Label(menu_frame, text='Star Mass (Solar Masses):')
+planet_mass_label = tk.Label(menu_frame, text='Planet Mass (Earth Masses):')
+planet_position_label = tk.Label(menu_frame, text='Planet x Position (AU):')
+planet_velocity_label = tk.Label(menu_frame, text='Planet y Velocity (km/s):')
+time_period_label = tk.Label(menu_frame, text='Time Period (years):')
 
 menu_frame.columnconfigure((0,1), weight = 1)
 menu_frame.rowconfigure((0,1,2,3,4,5,6,7, 8, 9), weight = 1)
 
-menu_slider_1.grid(row = 1, column = 0, sticky = 'ne')
-menu_slider_2.grid(row = 3, column = 0, sticky = 'ne')
-menu_slider_3.grid(row = 5, column = 0, sticky = 'ne')
-menu_slider_4.grid(row = 7, column = 0, sticky = 'ne')
-menu_slider_5.grid(row = 9, column = 0, sticky = 'ne')
+star_mass_slider.grid(row = 1, column = 0, sticky = 'ne')
+planet_mass_slider.grid(row = 3, column = 0, sticky = 'ne')
+planet_position_slider.grid(row = 5, column = 0, sticky = 'ne')
+planet_velocity_slider.grid(row = 7, column = 0, sticky = 'ne')
+time_period_slider.grid(row = 9, column = 0, sticky = 'ne')
 
 
-label_1.grid(row=0, sticky = 's')
-label_2.grid(row=2, sticky = 's')
-label_3.grid(row=4, sticky = 's')
-label_4.grid(row=6, sticky = 's')
-label_5.grid(row=8, sticky = 's')
+star_mass_label.grid(row=0, sticky = 's')
+planet_mass_label.grid(row=2, sticky = 's')
+planet_position_label.grid(row=4, sticky = 's')
+planet_velocity_label.grid(row=6, sticky = 's')
+time_period_label.grid(row=8, sticky = 's')
 
-entry_box_1.grid(row=1,column=1, sticky = 'nw')
-entry_box_2.grid(row=3,column=1, sticky = 'nw')
-entry_box_3.grid(row=5,column=1, sticky = 'nw')
-entry_box_4.grid(row=7,column=1, sticky = 'nw')
-entry_box_5.grid(row=9,column=1, sticky = 'nw')
-
-# my_label_2.grid(row=1,column=1)
-# my_label_3.grid(row=2,column=1)
-# my_label_4.grid(row=3,column=1)
+star_mass_box.grid(row=1,column=1, sticky = 'nw')
+planet_mass_box.grid(row=3,column=1, sticky = 'nw')
+planet_position_box.grid(row=5,column=1, sticky = 'nw')
+planet_velocity_box.grid(row=7,column=1, sticky = 'nw')
+time_period_box.grid(row=9,column=1, sticky = 'nw')
 
 fig = plt.figure()
 fig.tight_layout()
@@ -212,8 +207,12 @@ update_simulation()
 
 window.mainloop()
 
-# MAKE GRAPH READ SLIDER VALUE IN ORDER TO UPDATE ORBIT, ADD ENERGY PLOT, MAKE GUI LOOK NICE
 # USE A BETTER MODEL TO FIND ORBIT ('INTEGRATION') HAS TOO MANY STEPS AND LEADS TO ENERGY DRIFT
 # IF WE CAN GET THE ORBIT TO SHOW CONSERVATION OF ENERGY WE HAVE A GOOD MODEL
 
 #FORMAT ALL GRIDS AND WIDGETS BETTER
+
+#CREATE NEW FILE STRUCTURE
+#Move physics into physics.py
+#Move simulate orbit into simulation.py
+#main.py only responsible for starting application 
