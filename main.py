@@ -1,3 +1,5 @@
+import cmd
+
 import numpy as np
 import physics
 import matplotlib.pyplot as plt
@@ -18,10 +20,17 @@ def closing():
     except:
         pass
 
+def reset():
+    for configure in variable_configurations:
+        sld = sliders[configure['name']]
+        sld.set(configure['default'])
+
+
+
 def update_simulation():
     # first of all get the required data from the planets FROM SLIDERS
     star_mass = sliders['star_mass'].get() * physics.SOLAR_MASS
-    planet_mass = sliders['planet_mass'].get() * physics.SOLAR_MASS
+    planet_mass = sliders['planet_mass'].get() * physics.EARTH_MASS
 
     planet_position = np.array([sliders['planet_position'].get(), 0]) * physics.AU
     planet_velocity = np.array([0, sliders['planet_velocity'].get()]) * 1_000
@@ -55,12 +64,13 @@ def update_simulation():
 
     ax2.plot(
         np.array(times) / (physics.DAY_SECONDS * physics.DAYS_PER_YEAR),
-        np.array(energies)
+        ((np.array(energies) - energies[0]) / energies[0] ) * 100
     )
+    ax2.axhline(0 ,linestyle = 'dashed')
 
     ax2.set_xlabel('Time (years)')
-    ax2.set_ylabel('Total Energy (J)')
-    ax2.set_title('Total Energy vs Time')
+    ax2.set_ylabel('Energy Error (%)')
+    ax2.set_title('Energy Percentage Error vs Time')
 
     canvas.draw_idle()
 
@@ -85,8 +95,8 @@ main_frame = ttk.Frame(window)
 menu_frame.place(x = 0, y = 0, relwidth=0.3, relheight= 1)
 main_frame.place(relx=0.3, y = 0, relwidth = 0.7, relheight = 1)
 
-menu_frame.columnconfigure((0,1), weight = 1)
-menu_frame.rowconfigure((0,1,2,3,4,5,6,7, 8, 9), weight = 1)
+menu_frame.columnconfigure((0), weight = 1)
+menu_frame.rowconfigure((0,1,2,3,4,5,6,7, 8, 9, 10), weight = 1)
 
 variable_configurations = [
     {'name':'star_mass', 'label':'Star Mass (Solar Masses):', 'min': 0.1, 'max': 5 , 'default': 1, 'step':1000},
@@ -112,18 +122,21 @@ for i, configure in enumerate(variable_configurations):
     control_row = i * 2 + 1
 
     lbl = tk.Label(menu_frame, text=configure['label'])
-    lbl.grid(row=label_row, column=0, sticky='s')
+    lbl.grid(row=label_row, column=0 )
 
     sld = sliders[configure['name']]
-    sld.grid(row=control_row, column=0, sticky = 'ne')
+    sld.grid(row=control_row, column=0)
 
     var = variables[configure['name']]
     box = tk.Entry(menu_frame, width=5, textvariable=var)
-    box.grid(row=control_row, column=1, stick = 'nw')
+    box.grid(row=control_row, column=0)
     box.bind("<Return>", lambda event, name=configure["name"]: sliders[name].set(variables[name].get()))
 
     var.trace_add("write", lambda *args: update_simulation())
 
+milky_way = tk.Button(menu_frame, text='Resest')
+milky_way.grid(row=10)
+milky_way.config(command=reset)
 
 fig = plt.figure()
 fig.tight_layout()
@@ -143,4 +156,7 @@ window.mainloop()
 # USE A BETTER MODEL TO FIND ORBIT ('INTEGRATION') HAS TOO MANY STEPS AND LEADS TO ENERGY DRIFT
 # IF WE CAN GET THE ORBIT TO SHOW CONSERVATION OF ENERGY WE HAVE A GOOD MODEL
 
-#FORMAT ALL GRIDS AND WIDGETS BETTER
+# Add initial/final energy to the GUI.
+# Improve the layout.
+# Add validation for impossible/extreme inputs.
+# Then V1 is done and we can move on to V2 which is finding out how a better model for integration
