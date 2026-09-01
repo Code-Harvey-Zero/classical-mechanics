@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import tkinter as tk
 import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.animation import FuncAnimation
 
 import catppuccin
 import matplotlib as mpl
@@ -47,9 +48,9 @@ def update_simulation():
     except:
         return
 
-    ax1.plot(planet_x / physics.AU, planet_y / physics.AU, label ='Orbit')
+    orbit_line = ax1.plot(planet_x / physics.AU, planet_y / physics.AU, label ='Orbit')
     ax1.scatter(0,0, label = 'Central body', color = 'orange', s=150)
-    dot = ax1.scatter(planet_x[0]/physics.AU, planet_y[0]/physics.AU, label= 'Planetary body', color = '#00BFFF')
+    dot = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU, label= 'Planetary body', color = '#00BFFF')
 
     ax1.set_xlabel('x position (AU)')
     ax1.set_ylabel('y position (AU)')
@@ -74,24 +75,31 @@ def update_simulation():
 # Make Tkinter GUI
 mpl.style.use(catppuccin.PALETTE.mocha.identifier)
 
-window = tk.Tk()
+window = ctk.CTk()
 
 window.title('Orbital Simulator')
 
-icon = tk.PhotoImage(master=window, file='orbit_icon.png')
-window.iconphoto(False, icon)
+try:
+    icon = tk.PhotoImage(file='orbit_icon.png')
+    window.iconphoto(False, icon)
+except Exception:
+    pass
 
 window.minsize(1024,768)
 
 #layout widgets
-menu_frame = tk.Frame(window, bg='#64748B')
-main_frame = tk.Frame(window)
+background_frame = ctk.CTkFrame(window, fg_color='#1e1e2e')
+menu_frame = ctk.CTkFrame(window, fg_color='#64748B', corner_radius=10)
+main_frame = ctk.CTkFrame(window)
 
-menu_frame.place(x = 0, y = 0, relwidth=0.2, relheight= 1)
+background_frame.place(relx = 0, rely = 0, relwidth = 1, relheight = 1)
+menu_frame.place(relx=0.015, rely=0.015, relwidth=0.2, relheight=0.97)
 main_frame.place(relx=0.2, y = 0, relwidth = 0.8, relheight = 1)
 
+menu_frame.lift()
+
 menu_frame.columnconfigure((0), weight = 1)
-menu_frame.rowconfigure((0,1,2,3,4,5,6,7, 8, 9, 10), weight = 1)
+menu_frame.rowconfigure(list(range(11)), weight = 1)
 
 variable_configurations = [
     {'name':'star_mass', 'label':'Star Mass (Solar Masses):', 'min': 0.1, 'max': 5 , 'default': 1, 'step':980},
@@ -116,22 +124,21 @@ for i, configure in enumerate(variable_configurations):
     label_row = i * 2
     control_row = i * 2 + 1
 
-    lbl = tk.Label(menu_frame, text=configure['label'], font=("Helvetica", 8, "bold"))
+    lbl = ctk.CTkLabel(menu_frame, text=configure['label'], font=("Helvetica", 14, "bold"))
     lbl.grid(row=label_row, column=0 )
 
     sld = sliders[configure['name']]
     sld.grid(row=control_row, column=0, sticky = 'n')
 
     var = variables[configure['name']]
-    box = tk.Entry(menu_frame, width=10, textvariable=var)
+    box = ctk.CTkEntry(menu_frame, width=60, textvariable=var)
     box.grid(row=control_row, column=0)
     box.bind("<Return>", lambda event, name=configure["name"]: sliders[name].set(variables[name].get()))
 
     var.trace_add("write", lambda *args: update_simulation())
 
-milky_way = tk.Button(menu_frame, text='Reset')
+milky_way = ctk.CTkButton(menu_frame, text='Reset', command = reset)
 milky_way.grid(row=10)
-milky_way.config(command=reset)
 
 fig = plt.figure()
 
@@ -148,9 +155,7 @@ window.protocol('WM_DELETE_WINDOW', closing)
 
 window.mainloop()
 
-# USE A BETTER MODEL TO FIND ORBIT ('INTEGRATION') HAS TOO MANY STEPS AND LEADS TO ENERGY DRIFT
-# IF WE CAN GET THE ORBIT TO SHOW CONSERVATION OF ENERGY WE HAVE A GOOD MODEL
-
+# Add sphere orbiting animation
 # Add sphere orbiting animation
 # Make it so enter is required to put 
 # Improve the layout.
