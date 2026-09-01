@@ -26,24 +26,20 @@ def reset():
 
 def update_simulation():
     # first of all get the required data from the planets FROM SLIDERS
-    try:
-        star_mass = sliders['star_mass'].get() * physics.SOLAR_MASS
-        planet_mass = sliders['planet_mass'].get() * physics.EARTH_MASS
+    star_mass = sliders['star_mass'].get() * physics.SOLAR_MASS
+    planet_mass = sliders['planet_mass'].get() * physics.EARTH_MASS
 
-        planet_position = np.array([sliders['planet_position'].get(), 0]) * physics.AU
-        planet_velocity = np.array([0, sliders['planet_velocity'].get()]) * 1_000
+    planet_position = np.array([sliders['planet_position'].get(), 0], dtype=float) * physics.AU
+    planet_velocity = np.array([0, sliders['planet_velocity'].get()], dtype=float) * 1_000
+    time_period = sliders['time_period'].get()
 
-        time_period = sliders['time_period'].get()
-
-        planet_x, planet_y, planet_velocities, times, energies = physics.simulate_orbit(
-            time_period,
-            planet_position,
-            planet_velocity,
-            star_mass,
-            planet_mass
-        )
-    except:
-        return
+    planet_x, planet_y, planet_velocities, times, energies = physics.simulate_orbit(
+        time_period,
+        planet_position,
+        planet_velocity,
+        star_mass,
+        planet_mass
+    )
 
     try:
         ax1.clear()
