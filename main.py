@@ -1,12 +1,24 @@
 import numpy as np
+
 import physics
 import matplotlib.pyplot as plt
 import tkinter as tk
 import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.animation import FuncAnimation
 
 import catppuccin
 import matplotlib as mpl
+
+animation_1 = None
+animation_2 = None
+orbit_line = None
+planet_dot = None
+energy_line=None
+planet_x = None
+planet_y = None
+times = None
+energies = None
 
 def closing():
     window.quit()
@@ -23,9 +35,46 @@ def reset():
         sld.set(configure['default'])
     update_simulation()
 
+def update_data(frame):
+    orbit_line.set_data(
+        planet_x[:frame + 1] / physics.AU,
+        planet_y[:frame + 1] / physics.AU
+    )
+
+    planet_dot.set_offsets([
+        planet_x[frame] / physics.AU,
+        planet_y[frame] / physics.AU
+    ])
+
+    return orbit_line, planet_dot
+
+def update_energy(frame):
+    energy_line.set_data(np.array(times)[:frame + 1] / (physics.DAY_SECONDS * physics.DAYS_PER_YEAR),
+        ((np.array(energies)[:frame + 1] - energies[0]) / abs(energies[0]) ) * 100)
+
+    return energy_line,
+
+def energy_plot_show():
+    if show_energy.get() == 1:
+        energy_frame.place(relx=0.76, rely=-0.01, relwidth=0.25, relheight=0.26)
+    else:
+        energy_frame.place_forget()
 
 
 def update_simulation():
+    global animation_1, animation_2, orbit_line, planet_dot, energy_line
+    global planet_x, planet_y, energies, times
+
+    if animation_1 is not None:
+        if animation_1.event_source is not None:
+            animation_1.event_source.stop()
+        animation_1 = None
+
+    if animation_2 is not None:
+        if animation_2.event_source is not None:
+            animation_2.event_source.stop()
+        animation_2 = None
+
     # first of all get the required data from the planets FROM SLIDERS
     star_mass = sliders['star_mass'].get() * physics.SOLAR_MASS
     planet_mass = sliders['planet_mass'].get() * physics.EARTH_MASS
@@ -48,14 +97,15 @@ def update_simulation():
     except:
         return
 
-    orbit_line = ax1.plot(planet_x / physics.AU, planet_y / physics.AU, label ='Orbit')
+    ax1.plot(planet_x/physics.AU, planet_y/physics.AU, alpha=0)
+    orbit_line, = ax1.plot([planet_x[0]/physics.AU],[planet_y[0]/physics.AU],label='Orbit', color='C0')
 
     # Layering from the widest outer glow down to the intense core
     ax1.scatter([0] * 5, [0] * 5, s=[300, 160, 70, 24, 6],
                 color=['red', 'darkorange', 'orange', 'gold', 'white'],
                 alpha=[0.03, 0.08, 0.2, 0.5, 1.0], edgecolors='none', label='Central Body')
 
-    dot = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU, label= 'Planetary Body', color = '#00BFFF')
+    planet_dot = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU, label= 'Planetary Body', color = '#00BFFF')
 
     ax1.set_xlabel('x position (AU)')
     ax1.set_ylabel('y position (AU)')
@@ -66,8 +116,11 @@ def update_simulation():
 
     ax2.plot(
         np.array(times) / (physics.DAY_SECONDS * physics.DAYS_PER_YEAR),
-        ((np.array(energies) - energies[0]) / abs(energies[0]) ) * 100
+        ((np.array(energies) - energies[0]) / abs(energies[0]) ) * 100, alpha=0
     )
+
+    energy_line, = ax2.plot([0], [0])
+
     ax2.axhline(0 ,linestyle = 'dashed')
 
     ax2.set_xlabel('Time (years)')
@@ -80,8 +133,17 @@ def update_simulation():
     orbit_canvas.draw_idle()
     energy_canvas.draw_idle()
 
+    animation_1 = FuncAnimation(
+        orbit_plot,
+        update_data,
+        frames=len(planet_x),
+        interval=5,
+        blit=True,
+        repeat=False
+    )
 
-# Make Tkinter GUI
+    animation_2 = FuncAnimation(energy_plot, update_energy, frames=len(planet_x), interval = 5, blit = True, repeat= False)
+    # Make Tkinter GUI
 mpl.style.use(catppuccin.PALETTE.mocha.identifier)
 
 window = ctk.CTk()
@@ -94,7 +156,7 @@ try:
 except Exception:
     pass
 
-window.minsize(1024,768)
+window.minsize(1366,768)
 
 #layout widgets
 background_frame = ctk.CTkFrame(window, fg_color='#1e1e2e')
@@ -108,7 +170,6 @@ menu_frame.add('Settings')
 background_frame.place(relx = 0, rely = 0, relwidth = 1, relheight = 1)
 menu_frame.place(relx=0.015, rely=0.01, relwidth=0.3, relheight=0.97)
 orbit_frame.place(relx=0.3, y = 0, relwidth = 0.7, relheight = 1)
-energy_frame.place(relx=0.76, rely=-0.01, relwidth=0.25, relheight=0.26)
 
 menu_frame.lift()
 
@@ -163,6 +224,14 @@ run.grid(row=10, column = 1)
 milky_way = ctk.CTkButton(menu_frame.tab('Planet'), text='Reset', command = reset)
 milky_way.grid(row=10, column=0)
 
+#settings section
+show_energy = tk.IntVar()
+
+energy_check_box = ctk.CTkCheckBox(menu_frame.tab('Settings'), text='Show Energy Plot',
+                                   variable = show_energy, onvalue=1, offvalue=0, command=energy_plot_show)
+energy_check_box.pack(pady=(40,10))
+
+#set up
 orbit_plot, ax1 = plt.subplots()
 
 energy_plot, ax2 = plt.subplots()
@@ -179,8 +248,8 @@ window.protocol('WM_DELETE_WINDOW', closing)
 
 window.mainloop()
 
-# Add sphere orbiting animation
-# Add a tickbox for energy error graph, and change energy error graph appearance
+# change energy error graph appearance, and make it a draggable tab
 # Make it so enter is required to put input
 # Add validation for impossible/extreme inputs.
-# Then V1 is done and we can move on to V2 which is finding out how a better model for integration
+
+# Add Another Orbital body
