@@ -15,8 +15,8 @@ def calculate_acceleration(planet_position, star_mass, radius):
 
     # now find the negative unit vector of the radius squared in order to find the vector acceleration
 
-    unit_radius = - planet_position / (radius)
-    vector_acceleration = scalar_acceleration * unit_radius
+    unit_radius = -planet_position / radius[:, None]
+    vector_acceleration = scalar_acceleration[:, None] * unit_radius
     return vector_acceleration
 
 def calculate_energy(planet_mass, star_mass, radius, planet_velocity):
@@ -30,10 +30,10 @@ def calculate_energy(planet_mass, star_mass, radius, planet_velocity):
 def simulate_orbit(time_period, planet_position, planet_velocity, star_mass, planet_mass):
     planet_position = np.array(planet_position, dtype=float)
     planet_velocity = np.array(planet_velocity, dtype=float)
-    planet_x, planet_y, planet_velocities, times, energies = [], [], [], [], []
+    planet_x, planet_y, planet_velocities, times, energies = np.empty((0,2)), np.empty((0,2)), [], [], []
     dt = DAY_SECONDS / STEPS_PER_DAY
     for i in range(int(time_period * DAYS_PER_YEAR * STEPS_PER_DAY)): # Computes in quarter days
-        radius = np.linalg.norm(planet_position)
+        radius = np.linalg.norm(planet_position, axis=1)
 
         vector_acceleration = calculate_acceleration(planet_position, star_mass, radius)
 
@@ -42,14 +42,14 @@ def simulate_orbit(time_period, planet_position, planet_velocity, star_mass, pla
         planet_velocity += 0.5 * vector_acceleration * dt
         planet_position += planet_velocity * dt
 
-        radius = np.linalg.norm(planet_position)
+        radius = np.linalg.norm(planet_position, axis=1)
 
         vector_acceleration = calculate_acceleration(planet_position, star_mass, radius)
 
         planet_velocity += 0.5 * vector_acceleration * dt
 
-        planet_x.append(planet_position[0])
-        planet_y.append(planet_position[1])
+        planet_x = np.append(planet_x, [planet_position[:, 0]], axis=0)
+        planet_y = np.append(planet_y, [planet_position[:, 1]], axis=0)
         planet_velocities.append(np.linalg.norm(planet_velocity))
         times.append((i + 1) * dt)
 

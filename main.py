@@ -31,7 +31,8 @@ def closing():
         pass
 
 def reset():
-    widget.planet_widget_1.reset()
+    planet_widget_1.reset()
+    planet_widget_2.reset()
     update_simulation()
 
 def update_data(frame):
@@ -74,14 +75,22 @@ def update_simulation():
             animation_2.event_source.stop()
         animation_2 = None
 
+    try:
+        ax1.clear()
+        ax2.clear()
+    except:
+        return
+
+
     params = planet_widget_1.get_parameters()
+    params_2 = planet_widget_2.get_parameters()
 
     # first of all get the required data from the planets FROM SLIDERS
     star_mass = params['star_mass'] * physics.SOLAR_MASS
     planet_mass = params['planet_mass'] * physics.EARTH_MASS
 
-    planet_position = np.array([params['planet_position'], 0], dtype=float) * physics.AU
-    planet_velocity = np.array([0, params['planet_velocity']], dtype=float) * 1_000
+    planet_position = np.array([[params['planet_position'], 0], [params_2['planet_position'],0]], dtype=float) * physics.AU
+    planet_velocity = np.array([[0, params['planet_velocity']], [0, params_2['planet_velocity']]], dtype=float) * 1_000
     time_period = params['time_period']
 
     planet_x, planet_y, planet_velocities, times, energies = physics.simulate_orbit(
@@ -92,14 +101,11 @@ def update_simulation():
         planet_mass
     )
 
-    try:
-        ax1.clear()
-        ax2.clear()
-    except:
-        return
+
 
     ax1.plot(planet_x/physics.AU, planet_y/physics.AU, alpha=0)
-    orbit_line, = ax1.plot([planet_x[0]/physics.AU],[planet_y[0]/physics.AU],label='Orbit', color='C0')
+    #orbit_line, = ax1.plot(planet_x/physics.AU,planet_y/physics.AU,label='Orbit', color='C0')
+    ax1.plot(planet_x / physics.AU, planet_y / physics.AU)
 
     # Layering from the widest outer glow down to the intense core
     ax1.scatter([0] * 5, [0] * 5, s=[300, 160, 70, 24, 6],
@@ -134,9 +140,9 @@ def update_simulation():
     orbit_canvas.draw_idle()
     energy_canvas.draw_idle()
 
-    animation_1 = FuncAnimation(orbit_plot,update_data,frames=len(planet_x),interval=5,blit=True,repeat=False)
+    #animation_1 = FuncAnimation(orbit_plot,update_data,frames=len(planet_x),interval=5,blit=True,repeat=False)
 
-    animation_2 = FuncAnimation(energy_plot, update_energy, frames=len(planet_x), interval = 5, blit = True, repeat= False)
+    #animation_2 = FuncAnimation(energy_plot, update_energy, frames=len(planet_x), interval = 5, blit = True, repeat= False)
     # Make Tkinter GUI
 mpl.style.use(catppuccin.PALETTE.mocha.identifier)
 
@@ -159,6 +165,7 @@ orbit_frame = ctk.CTkFrame(window)
 energy_frame = ctk.CTkFrame(window, border_color='#CBD5E1', border_width=1, corner_radius=5, fg_color='#1e1e2e')
 
 menu_frame.add('Planet 1')
+menu_frame.add('Planet 2')
 menu_frame.add('Settings')
 
 background_frame.place(relx = 0, rely = 0, relwidth = 1, relheight = 1)
@@ -168,11 +175,17 @@ orbit_frame.place(relx=0.3, y = 0, relwidth = 0.7, relheight = 1)
 menu_frame.lift()
 
 planet_1_tab = menu_frame.tab('Planet 1')
+planet_2_tab = menu_frame.tab('Planet 2')
 
 planet_1_tab.columnconfigure((0, 1), weight=1)
+planet_2_tab.columnconfigure((0,1), weight=1)
 
 planet_widget_1 = widgets.PlanetWidget(planet_1_tab, fg_color='#64748B')
 planet_widget_1.pack(fill='both',expand=True,padx=10,pady=10)
+planet_widget_2 = widgets.PlanetWidget(planet_2_tab, fg_color='#64748B')
+planet_widget_2.pack(fill='both',expand=True,padx=10,pady=10)
+
+
 
 button_frame = ctk.CTkFrame(planet_1_tab)
 button_frame.pack(fill='x',padx=10,pady=10)
