@@ -60,3 +60,5 @@ def simulate_orbit(time_period, planet_position, planet_velocity, star_mass, pla
     return np.array(planet_x), np.array(planet_y), np.array(planet_velocities), np.array(times), np.array(energies)
 
 # Velocity Verlet
+
+#Todo add another orbital body

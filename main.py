@@ -1,6 +1,7 @@
 import numpy as np
 
 import physics
+import widgets
 import matplotlib.pyplot as plt
 import tkinter as tk
 import customtkinter as ctk
@@ -30,9 +31,7 @@ def closing():
         pass
 
 def reset():
-    for configure in variable_configurations:
-        sld = sliders[configure['name']]
-        sld.set(configure['default'])
+    widget.planet_widget_1.reset()
     update_simulation()
 
 def update_data(frame):
@@ -56,7 +55,7 @@ def update_energy(frame):
 
 def energy_plot_show():
     if show_energy.get() == 1:
-        energy_frame.place(relx=0.76, rely=-0.01, relwidth=0.25, relheight=0.26)
+        energy_frame.place(relx=0.75, rely=-0.00, relwidth=0.25, relheight=0.26)
     else:
         energy_frame.place_forget()
 
@@ -75,13 +74,15 @@ def update_simulation():
             animation_2.event_source.stop()
         animation_2 = None
 
-    # first of all get the required data from the planets FROM SLIDERS
-    star_mass = sliders['star_mass'].get() * physics.SOLAR_MASS
-    planet_mass = sliders['planet_mass'].get() * physics.EARTH_MASS
+    params = planet_widget_1.get_parameters()
 
-    planet_position = np.array([sliders['planet_position'].get(), 0], dtype=float) * physics.AU
-    planet_velocity = np.array([0, sliders['planet_velocity'].get()], dtype=float) * 1_000
-    time_period = sliders['time_period'].get()
+    # first of all get the required data from the planets FROM SLIDERS
+    star_mass = params['star_mass'] * physics.SOLAR_MASS
+    planet_mass = params['planet_mass'] * physics.EARTH_MASS
+
+    planet_position = np.array([params['planet_position'], 0], dtype=float) * physics.AU
+    planet_velocity = np.array([0, params['planet_velocity']], dtype=float) * 1_000
+    time_period = params['time_period']
 
     planet_x, planet_y, planet_velocities, times, energies = physics.simulate_orbit(
         time_period,
@@ -133,14 +134,7 @@ def update_simulation():
     orbit_canvas.draw_idle()
     energy_canvas.draw_idle()
 
-    animation_1 = FuncAnimation(
-        orbit_plot,
-        update_data,
-        frames=len(planet_x),
-        interval=5,
-        blit=True,
-        repeat=False
-    )
+    animation_1 = FuncAnimation(orbit_plot,update_data,frames=len(planet_x),interval=5,blit=True,repeat=False)
 
     animation_2 = FuncAnimation(energy_plot, update_energy, frames=len(planet_x), interval = 5, blit = True, repeat= False)
     # Make Tkinter GUI
@@ -164,7 +158,7 @@ menu_frame = ctk.CTkTabview(window, fg_color='#64748B', corner_radius=10, border
 orbit_frame = ctk.CTkFrame(window)
 energy_frame = ctk.CTkFrame(window, border_color='#CBD5E1', border_width=1, corner_radius=5, fg_color='#1e1e2e')
 
-menu_frame.add('Planet')
+menu_frame.add('Planet 1')
 menu_frame.add('Settings')
 
 background_frame.place(relx = 0, rely = 0, relwidth = 1, relheight = 1)
@@ -173,56 +167,21 @@ orbit_frame.place(relx=0.3, y = 0, relwidth = 0.7, relheight = 1)
 
 menu_frame.lift()
 
-menu_frame.tab('Planet').columnconfigure((0,1), weight = 1)
-menu_frame.tab('Planet').rowconfigure(list(range(5)), weight = 1)
+planet_1_tab = menu_frame.tab('Planet 1')
 
-variable_configurations = [
-    {'name':'star_mass', 'label':'Star Mass (Solar Masses)', 'min': 0.1, 'max': 5 , 'default': 1, 'step':980},
-    {'name':'planet_mass', 'label':'Planet Mass (Earth Masses)', 'min': 0.1, 'max': 10, 'default': 1 , 'step':980},
-    {'name':'planet_position', 'label':'Planet x Position (AU)', 'min': 0.1, 'max': 5, 'default': 1 , 'step':980},
-    {'name':'planet_velocity', 'label':'Planet y Velocity (km/s)', 'min': 0 , 'max': 100, 'default': 30, 'step':1000},
-    {'name':'time_period', 'label':'Time Period (years)', 'min':1 , 'max':5 , 'default':1 , 'step':100}]
+planet_1_tab.columnconfigure((0, 1), weight=1)
 
-variables, sliders = {}, {}
+planet_widget_1 = widgets.PlanetWidget(planet_1_tab, fg_color='#64748B')
+planet_widget_1.pack(fill='both',expand=True,padx=10,pady=10)
 
-for i, configure in enumerate(variable_configurations):
-    row_frame = ctk.CTkFrame(master = menu_frame.tab('Planet'), width = 1)
-    row_frame.grid(row=i, column=0, columnspan=2, sticky="ew", padx=10, pady=5)
-    row_frame.columnconfigure(0, weight=4, uniform='row_col')
-    row_frame.columnconfigure(1, weight=4, uniform='row_col')
-    row_frame.columnconfigure(2, weight=1, uniform='row_col')
+button_frame = ctk.CTkFrame(planet_1_tab)
+button_frame.pack(fill='x',padx=10,pady=10)
 
+run = ctk.CTkButton(button_frame,text='Run',command=update_simulation, bg_color='#64748B')
+run.pack(side='right', padx=5)
 
-    lbl = ctk.CTkLabel(row_frame,
-                       text=configure['label'],
-                       font=("Helvetica", 14, "bold"),
-                       fg_color='#313244',
-                       border_width=1,
-                       border_color='',
-                       corner_radius=5,
-                       padx=15,
-                       pady=8)
-    lbl.grid(row = 0, column=0, sticky = 'ew', padx = 10, pady = 10)
-
-    var = tk.DoubleVar(value=configure['default'])
-    variables[configure['name']] = var
-
-    sld = ctk.CTkSlider(row_frame, from_=configure['min'], to=configure['max'], variable=var,
-                        number_of_steps=configure['step'])
-    sld.set(configure['default'])
-
-    sliders[configure['name']] = sld
-    sld.grid(row=0, column=1, sticky='e')
-
-    box = ctk.CTkEntry(row_frame, width=60, textvariable=var)
-    box.grid(row=0, column=2, sticky='w', padx=10)
-    box.bind("<Return>", lambda event, name=configure["name"]: sliders[name].set(f"{variables[name].get():.3g}"))
-
-run = ctk.CTkButton(menu_frame.tab('Planet'), text='Run', command = update_simulation)
-run.grid(row=10, column = 1)
-
-milky_way = ctk.CTkButton(menu_frame.tab('Planet'), text='Reset', command = reset)
-milky_way.grid(row=10, column=0)
+milky_way = ctk.CTkButton(button_frame,text='Reset',command=reset, bg_color='#64748B')
+milky_way.pack(side='left', padx=5)
 
 #settings section
 show_energy = tk.IntVar()
@@ -248,8 +207,9 @@ window.protocol('WM_DELETE_WINDOW', closing)
 
 window.mainloop()
 
-# change energy error graph appearance, and make it a draggable tab
-# Make it so enter is required to put input
-# Add validation for impossible/extreme inputs.
 
-# Add Another Orbital body
+#Todo add Another Orbital body
+# Add validation for impossible/extreme inputs.
+# Make draggable tab class
+# Combine animation Functions?
+# Change architecture
