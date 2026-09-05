@@ -95,7 +95,7 @@ def update_simulation():
 
     # first of all get the required data from the planets FROM SLIDERS
     star_mass = params['star_mass'] * physics.SOLAR_MASS
-    planet_mass = params['planet_mass'] * physics.EARTH_MASS
+    planet_masses = np.array((params['planet_mass'], params_2['planet_mass'])) * physics.EARTH_MASS
 
     planet_position = np.array([[params['planet_position'], 0], [params_2['planet_position'],0]], dtype=float) * physics.AU
     planet_velocity = np.array([[0, params['planet_velocity']], [0, params_2['planet_velocity']]], dtype=float) * 1_000
@@ -106,7 +106,7 @@ def update_simulation():
         planet_position,
         planet_velocity,
         star_mass,
-        planet_mass
+        planet_masses
     )
 
 
