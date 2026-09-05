@@ -149,9 +149,9 @@ def update_simulation():
     orbit_canvas.draw_idle()
     energy_canvas.draw_idle()
 
-    animation_1 = FuncAnimation(orbit_plot,update_data,frames=len(planet_x),interval=2,blit=True,repeat=False)
+    animation_1 = FuncAnimation(orbit_plot,update_data,frames=len(planet_x),interval=5,blit=True,repeat=False)
 
-    #animation_2 = FuncAnimation(energy_plot, update_energy, frames=len(planet_x), interval = 5, blit = True, repeat= False)
+    animation_2 = FuncAnimation(energy_plot, update_energy, frames=len(planet_x), interval = 5, blit = True, repeat= False)
     # Make Tkinter GUI
 mpl.style.use(catppuccin.PALETTE.mocha.identifier)
 

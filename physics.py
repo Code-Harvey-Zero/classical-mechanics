@@ -31,11 +31,19 @@ def calculate_acceleration(planet_position, star_mass,planet_masses, radius):
 
     return vector_acceleration
 
-def calculate_energy(planet_masses, star_mass, radius, planet_velocity):
-    potential_energy = (- G * star_mass * planet_masses) / radius
-    planet_speed = np.linalg.norm(planet_velocity)
-    kinetic_energy = 0.5 * planet_masses * (planet_speed ** 2)
+def calculate_energy(planet_masses, star_mass, radius, planet_velocity, planet_position):
+    potential_energy = sum((- G * star_mass * planet_masses) / radius)
+    planet_speed = np.linalg.norm(planet_velocity, axis=1)
+    kinetic_energy = sum(0.5 * planet_masses * (planet_speed ** 2))
     total_energy = kinetic_energy + potential_energy
+    for i in range(len(planet_masses)):
+        for j in range(i+1, len(planet_masses)):
+            seperation_vector = planet_position[j] - planet_position[i]
+            seperation = np.linalg.norm(seperation_vector)
+            if seperation ==0:
+                continue
+            else:
+                total_energy += -G * planet_masses[i] * planet_masses[j] / seperation
     return total_energy
 
 
@@ -44,7 +52,7 @@ def simulate_orbit(time_period, planet_position, planet_velocity, star_mass, pla
     planet_velocity = np.array(planet_velocity, dtype=float)
     planet_x, planet_y, planet_velocities, times, energies = np.empty((0,2)), np.empty((0,2)), [], [], []
     dt = DAY_SECONDS / STEPS_PER_DAY
-    for i in range(int(time_period * DAYS_PER_YEAR * STEPS_PER_DAY)): # Computes in quarter days
+    for i in range(int(time_period * DAYS_PER_YEAR * STEPS_PER_DAY)): # Computes in half days
         radius = np.linalg.norm(planet_position, axis=1)
 
         vector_acceleration = calculate_acceleration(planet_position, star_mass,planet_masses, radius)
@@ -62,10 +70,10 @@ def simulate_orbit(time_period, planet_position, planet_velocity, star_mass, pla
 
         planet_x = np.append(planet_x, [planet_position[:, 0]], axis=0)
         planet_y = np.append(planet_y, [planet_position[:, 1]], axis=0)
-        planet_velocities.append(np.linalg.norm(planet_velocity))
+        planet_velocities.append(np.linalg.norm(planet_velocity, axis=1))
         times.append((i + 1) * dt)
 
-        energy = calculate_energy(planet_masses, star_mass, radius, planet_velocity)
+        energy = calculate_energy(planet_masses, star_mass, radius, planet_velocity, planet_position)
         energies.append(energy)
 
 
