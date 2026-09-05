@@ -19,7 +19,7 @@ class Body(ctk.CTkFrame):
 
         self.columnconfigure(0, weight=1)
 
-        for i, configure in enumerate(self.variable_configurations):
+        for i, configure in enumerate(self.variable_configurations, start=1):
             self.rowconfigure(i, weight=0)
 
             row_frame = ctk.CTkFrame(master=self,width=1)
@@ -77,16 +77,48 @@ class Body(ctk.CTkFrame):
 class StarWidget(Body):
     variable_configurations = [
             {'name': 'star_mass', 'label': 'Star Mass (Solar Masses)', 'min': 0.1, 'max': 5, 'default': 1, 'step': 980},
+            {'name': 'star_radius', 'label': 'Radius (Solar Radii)', 'min': 0.1, 'max': 10, 'default': 1, 'step': 99},
             {'name': 'time_period', 'label': 'Time Period (years)', 'min': 1, 'max': 5, 'default': 1, 'step': 100}]
-
-
-
 
 
 class PlanetWidget(Body):
     variable_configurations = [
-        {'name': 'planet_mass', 'label': 'Planet Mass (Earth Masses)', 'min': 0.1, 'max': 10, 'default': 1,
+        {'name': 'planet_mass', 'label': 'Mass (Earth Masses)', 'min': 0.1, 'max': 10, 'default': 1,
          'step': 980},
-        {'name': 'planet_position', 'label': 'Planet x Position (AU)', 'min': 0.1, 'max': 5, 'default': 1, 'step': 980},
-        {'name': 'planet_velocity', 'label': 'Planet y Velocity (km/s)', 'min': 0, 'max': 100, 'default': 30,
+        {'name': 'planet_radius', 'label': 'Radius (Earth Radii)','min':0.1, 'max':15, 'default':1, 'step':150 },
+        {'name': 'planet_position', 'label': 'X Position (AU)', 'min': 0.1, 'max': 5, 'default': 1, 'step': 980},
+        {'name': 'planet_velocity', 'label': 'Y Velocity (km/s)', 'min': 0, 'max': 100, 'default': 30,
          'step': 1000}]
+
+    def __init__(self, master, tabview, tab_name, defaults=None, **kwargs):
+        self.defaults = defaults or {}
+        self.tabview = tabview
+        self.tab_name = tab_name
+
+        # Make a copy so we don't modify the class-level list
+        self.variable_configurations = [
+            config.copy() for config in self.variable_configurations
+        ]
+
+        for config in self.variable_configurations:
+            if config['name'] in self.defaults:
+                config['default'] = self.defaults[config['name']]
+
+        super().__init__(master, **kwargs)
+
+        self.planet_name = ctk.CTkEntry(self)
+        self.planet_name.grid(row=0, column=0, padx=10, pady=10)
+        self.planet_name.bind(
+            "<Return>",
+            self.change_name
+        )
+
+    def change_name(self, event=None):
+        new_name = self.planet_name.get().strip()
+
+        if not new_name:
+            return
+
+        self.tabview.rename(self.tab_name, new_name)
+        self.tab_name = new_name
+

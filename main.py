@@ -7,6 +7,7 @@ import tkinter as tk
 import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.animation import FuncAnimation
+from matplotlib.patches import Circle
 
 import catppuccin
 import matplotlib as mpl
@@ -93,7 +94,10 @@ def update_simulation():
 
     params = star_widget.get_parameters()
     star_mass = params['star_mass'] * physics.SOLAR_MASS
+    star_radius = params['star_radius']
     time_period = params['time_period']
+
+
 
     params = planet_widget_1.get_parameters()
     params_2 = planet_widget_2.get_parameters()
@@ -114,18 +118,27 @@ def update_simulation():
     )
 
 
-
     ax1.plot(planet_x/physics.AU, planet_y/physics.AU, alpha=0)
     #orbit_line, = ax1.plot(planet_x/physics.AU,planet_y/physics.AU,label='Orbit', color='C0')
-    orbit_line_1, = ax1.plot([],[])
-    orbit_line_2, = ax1.plot([],[]) # plot first points
+    orbit_line_1, = ax1.plot([],[], zorder=1, color='#74C7EC')
+    orbit_line_2, = ax1.plot([],[], zorder=1, color = '#74C7EC') # plot first points
 
     # Layering from the widest outer glow down to the intense core
-    ax1.scatter([0] * 5, [0] * 5, s=[300, 160, 70, 24, 6],
-                color=['red', 'darkorange', 'orange', 'gold', 'white'],
-                alpha=[0.03, 0.08, 0.2, 0.5, 1.0], edgecolors='none', label='Central Body')
+    ax1.scatter(
+        [0] * 5,
+        [0] * 5,
+        s=np.array([3000, 1600, 700, 240, 60]) * (star_radius**2),
+        color=['red', 'darkorange', 'orange', 'gold', 'white'],
+        alpha=[0.03, 0.08, 0.2, 0.5, 1.0],
+        edgecolors='none',
+        label='Central Body',
+        zorder=4
+    )
 
-    planet_dots = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU, label= 'Planetary Body', color = '#00BFFF')
+    planet_dots = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU, label= ['Planetary Body 1'], color = ['#E07A5F','#A6E3A1'], s=[
+        params['planet_radius'] ** 2 * 10,
+        params_2['planet_radius'] ** 2 * 10
+    ],zorder=2)
 
     ax1.set_xlabel('x position (AU)')
     ax1.set_ylabel('y position (AU)')
@@ -174,38 +187,54 @@ window.minsize(1366,768)
 #layout widgets
 background_frame = ctk.CTkFrame(window, fg_color='#1e1e2e')
 menu_frame = ctk.CTkFrame(window, fg_color='#64748B', corner_radius=10, border_width=1, border_color = '#CBD5E1', bg_color='#1e1e2e')
-tab_frame = ctk.CTkTabview(menu_frame, fg_color='#64748B', corner_radius=10, border_width=1, border_color = '#CBD5E1', bg_color='#1e1e2e')
+tab_frame = ctk.CTkTabview(menu_frame, fg_color='#64748B', corner_radius=10, bg_color='#64748B', border_color='#1e1e2e', border_width=2)
 orbit_frame = ctk.CTkFrame(window)
 energy_frame = ctk.CTkFrame(window, border_color='#CBD5E1', border_width=1, corner_radius=5, fg_color='#1e1e2e')
 
-tab_frame.add('Planet 1')
-tab_frame.add('Planet 2')
+tab_frame.add('Earth')
+tab_frame.add('Mars')
 tab_frame.add('Settings')
 
 background_frame.place(relx = 0, rely = 0, relwidth = 1, relheight = 1)
 menu_frame.place(relx=0.015, rely=0.01, relwidth=0.3, relheight=0.97)
-tab_frame.pack()
 orbit_frame.place(relx=0.3, y = 0, relwidth = 0.7, relheight = 1)
 
 menu_frame.lift()
 
-planet_1_tab = tab_frame.tab('Planet 1')
-planet_2_tab = tab_frame.tab('Planet 2')
+planet_1_tab = tab_frame.tab('Earth')
+planet_2_tab = tab_frame.tab('Mars')
 
 planet_1_tab.columnconfigure((0, 1), weight=1)
 planet_2_tab.columnconfigure((0,1), weight=1)
 
-planet_widget_1 = widgets.PlanetWidget(planet_1_tab, fg_color='#64748B')
+planet_widget_1 = widgets.PlanetWidget(
+    planet_1_tab,
+    tabview=tab_frame,
+    tab_name='Earth',
+    fg_color='#64748B'
+)
 planet_widget_1.pack(fill='both',expand=True,padx=10,pady=10)
-planet_widget_2 = widgets.PlanetWidget(planet_2_tab, fg_color='#64748B')
+planet_widget_2 = widgets.PlanetWidget(
+    planet_2_tab,
+    tabview=tab_frame,
+    tab_name='Mars',
+    defaults={
+        'planet_mass': 0.107,
+        'planet_radius': 0.532,
+        'planet_position': 1.52,
+        'planet_velocity': 24.1
+    },
+    fg_color='#64748B'
+)
 planet_widget_2.pack(fill='both',expand=True,padx=10,pady=10)
 
 star_widget = widgets.StarWidget(menu_frame, fg_color='#64748B')
-star_widget.pack(fill='both',expand=True,padx=10,pady=10)
+star_widget.pack(padx=10,pady=10)
+tab_frame.pack(fill='both',expand=True,padx=10,pady=10)
 
 
 
-button_frame = ctk.CTkFrame(menu_frame)
+button_frame = ctk.CTkFrame(menu_frame, fg_color='#64748B')
 button_frame.pack(fill='x',padx=10,pady=10)
 
 run = ctk.CTkButton(button_frame,text='Run',command=update_simulation, bg_color='#64748B')
