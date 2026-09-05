@@ -1,23 +1,19 @@
 import tkinter as tk
 import customtkinter as ctk
 
-class PlanetWidget(ctk.CTkFrame):
-    variable_configurations = [
-        {'name': 'star_mass', 'label': 'Star Mass (Solar Masses)', 'min': 0.1, 'max': 5, 'default': 1, 'step': 980},
-        {'name': 'planet_mass', 'label': 'Planet Mass (Earth Masses)', 'min': 0.1, 'max': 10, 'default': 1,
-         'step': 980},
-        {'name': 'planet_position', 'label': 'Planet x Position (AU)', 'min': 0.1, 'max': 5, 'default': 1, 'step': 980},
-        {'name': 'planet_velocity', 'label': 'Planet y Velocity (km/s)', 'min': 0, 'max': 100, 'default': 30,
-         'step': 1000},
-        {'name': 'time_period', 'label': 'Time Period (years)', 'min': 1, 'max': 5, 'default': 1, 'step': 100}]
+class Body(ctk.CTkFrame):
 
-    def __init__(self, master, name='Planet', **kwargs):
+    all_instances=[]
+
+    def __init__(self, master, name='empty', **kwargs):
         super().__init__(master, **kwargs)
 
         self.name = name
         self.variables = {}
         self.sliders = {}
         self.create_widgets()
+
+        Body.all_instances.append(self)
 
     def create_widgets(self):
 
@@ -73,3 +69,24 @@ class PlanetWidget(ctk.CTkFrame):
             self.sliders[config['name']].set(
                 config['default']
             )
+
+
+
+
+
+class StarWidget(Body):
+    variable_configurations = [
+            {'name': 'star_mass', 'label': 'Star Mass (Solar Masses)', 'min': 0.1, 'max': 5, 'default': 1, 'step': 980},
+            {'name': 'time_period', 'label': 'Time Period (years)', 'min': 1, 'max': 5, 'default': 1, 'step': 100}]
+
+
+
+
+
+class PlanetWidget(Body):
+    variable_configurations = [
+        {'name': 'planet_mass', 'label': 'Planet Mass (Earth Masses)', 'min': 0.1, 'max': 10, 'default': 1,
+         'step': 980},
+        {'name': 'planet_position', 'label': 'Planet x Position (AU)', 'min': 0.1, 'max': 5, 'default': 1, 'step': 980},
+        {'name': 'planet_velocity', 'label': 'Planet y Velocity (km/s)', 'min': 0, 'max': 100, 'default': 30,
+         'step': 1000}]
