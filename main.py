@@ -13,8 +13,9 @@ import matplotlib as mpl
 
 animation_1 = None
 animation_2 = None
-orbit_line = None
-planet_dot = None
+orbit_line_1 = None
+planet_dots = None
+orbit_line_2 = None
 energy_line=None
 planet_x = None
 planet_y = None
@@ -36,17 +37,24 @@ def reset():
     update_simulation()
 
 def update_data(frame):
-    orbit_line.set_data(
-        planet_x[:frame + 1] / physics.AU,
-        planet_y[:frame + 1] / physics.AU
+    orbit_line_1.set_data(
+        planet_x[:frame + 1, 0] / physics.AU,
+        planet_y[:frame + 1, 0] / physics.AU
     )
 
-    planet_dot.set_offsets([
-        planet_x[frame] / physics.AU,
-        planet_y[frame] / physics.AU
-    ])
+    orbit_line_2.set_data(
+        planet_x[:frame + 1, 1] / physics.AU,
+        planet_y[:frame + 1, 1] / physics.AU
+    )
 
-    return orbit_line, planet_dot
+    planet_dots.set_offsets(
+        np.column_stack((
+            planet_x[frame, :] / physics.AU,
+            planet_y[frame, :] / physics.AU
+        ))
+    )
+
+    return orbit_line_1, planet_dots, orbit_line_2
 
 def update_energy(frame):
     energy_line.set_data(np.array(times)[:frame + 1] / (physics.DAY_SECONDS * physics.DAYS_PER_YEAR),
@@ -62,7 +70,7 @@ def energy_plot_show():
 
 
 def update_simulation():
-    global animation_1, animation_2, orbit_line, planet_dot, energy_line
+    global animation_1, animation_2, orbit_line_1, planet_dots, orbit_line_2, energy_line
     global planet_x, planet_y, energies, times
 
     if animation_1 is not None:
@@ -105,14 +113,15 @@ def update_simulation():
 
     ax1.plot(planet_x/physics.AU, planet_y/physics.AU, alpha=0)
     #orbit_line, = ax1.plot(planet_x/physics.AU,planet_y/physics.AU,label='Orbit', color='C0')
-    ax1.plot(planet_x / physics.AU, planet_y / physics.AU)
+    orbit_line_1, = ax1.plot([],[])
+    orbit_line_2, = ax1.plot([],[]) # plot first points
 
     # Layering from the widest outer glow down to the intense core
     ax1.scatter([0] * 5, [0] * 5, s=[300, 160, 70, 24, 6],
                 color=['red', 'darkorange', 'orange', 'gold', 'white'],
                 alpha=[0.03, 0.08, 0.2, 0.5, 1.0], edgecolors='none', label='Central Body')
 
-    planet_dot = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU, label= 'Planetary Body', color = '#00BFFF')
+    planet_dots = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU, label= 'Planetary Body', color = '#00BFFF')
 
     ax1.set_xlabel('x position (AU)')
     ax1.set_ylabel('y position (AU)')
@@ -140,7 +149,7 @@ def update_simulation():
     orbit_canvas.draw_idle()
     energy_canvas.draw_idle()
 
-    #animation_1 = FuncAnimation(orbit_plot,update_data,frames=len(planet_x),interval=5,blit=True,repeat=False)
+    animation_1 = FuncAnimation(orbit_plot,update_data,frames=len(planet_x),interval=2,blit=True,repeat=False)
 
     #animation_2 = FuncAnimation(energy_plot, update_energy, frames=len(planet_x), interval = 5, blit = True, repeat= False)
     # Make Tkinter GUI
@@ -221,7 +230,8 @@ window.protocol('WM_DELETE_WINDOW', closing)
 window.mainloop()
 
 
-#Todo add Another Orbital body
+#Todo correct energy graph
+# change display of GUI
 # Add validation for impossible/extreme inputs.
 # Make draggable tab class
 # Combine animation Functions?
