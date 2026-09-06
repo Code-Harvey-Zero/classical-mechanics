@@ -50,7 +50,7 @@ def calculate_energy(planet_masses, star_mass, radius, planet_velocity, planet_p
 def simulate_orbit(time_period, planet_position, planet_velocity, star_mass, planet_masses):
     planet_position = np.array(planet_position, dtype=float)
     planet_velocity = np.array(planet_velocity, dtype=float)
-    planet_x, planet_y, planet_velocities, times, energies = np.empty((0,2)), np.empty((0,2)), [], [], []
+    planet_x, planet_y, planet_velocities, times, energies = np.empty((0,len(planet_masses))), np.empty((0,len(planet_masses))), [], [], []
     dt = DAY_SECONDS / STEPS_PER_DAY
     for i in range(int(time_period * DAYS_PER_YEAR * STEPS_PER_DAY)): # Computes in half days
         radius = np.linalg.norm(planet_position, axis=1)

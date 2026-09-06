@@ -71,22 +71,24 @@ class Body(ctk.CTkFrame):
             )
 
 
-
-
+class GeneralSettings(Body):
+    variable_configurations = [
+        {'name': 'time_period', 'label': 'Time Period (years)', 'min': 1, 'max': 10, 'default': 1, 'step': 100},
+        {'name': 'number_of_planets', 'label': 'Number of Planets', 'min': 1, 'max': 10, 'default': 8, 'step': 9}]
 
 class StarWidget(Body):
     variable_configurations = [
             {'name': 'star_mass', 'label': 'Star Mass (Solar Masses)', 'min': 0.1, 'max': 5, 'default': 1, 'step': 980},
-            {'name': 'star_radius', 'label': 'Radius (Solar Radii)', 'min': 0.1, 'max': 10, 'default': 1, 'step': 99},
-            {'name': 'time_period', 'label': 'Time Period (years)', 'min': 1, 'max': 5, 'default': 1, 'step': 100}]
+            {'name': 'star_radius', 'label': 'Radius (Solar Radii)', 'min': 0.1, 'max': 10, 'default': 1, 'step': 99}]
+
 
 
 class PlanetWidget(Body):
     variable_configurations = [
-        {'name': 'planet_mass', 'label': 'Mass (Earth Masses)', 'min': 0.1, 'max': 10, 'default': 1,
+        {'name': 'planet_mass', 'label': 'Mass (Earth Masses)', 'min': 0.1, 'max': 350, 'default': 1,
          'step': 980},
         {'name': 'planet_radius', 'label': 'Radius (Earth Radii)','min':0.1, 'max':15, 'default':1, 'step':150 },
-        {'name': 'planet_position', 'label': 'X Position (AU)', 'min': 0.1, 'max': 5, 'default': 1, 'step': 980},
+        {'name': 'planet_position', 'label': 'X Position (AU)', 'min': 0.1, 'max': 35, 'default': 1, 'step': 980},
         {'name': 'planet_velocity', 'label': 'Y Velocity (km/s)', 'min': 0, 'max': 100, 'default': 30,
          'step': 1000}]
 
