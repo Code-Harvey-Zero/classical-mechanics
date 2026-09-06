@@ -14,9 +14,8 @@ import matplotlib as mpl
 
 animation_1 = None
 animation_2 = None
-orbit_line_1 = None
+orbit_lines = []
 planet_dots = None
-orbit_line_2 = None
 energy_line=None
 planet_x = None
 planet_y = None
@@ -39,15 +38,11 @@ def reset():
     update_simulation()
 
 def update_data(frame):
-    orbit_line_1.set_data(
-        planet_x[:frame + 1, 0] / physics.AU,
-        planet_y[:frame + 1, 0] / physics.AU
-    )
-
-    orbit_line_2.set_data(
-        planet_x[:frame + 1, 1] / physics.AU,
-        planet_y[:frame + 1, 1] / physics.AU
-    )
+    for i in range(number_of_planets):
+        orbit_lines[i].set_data(
+            planet_x[:frame + 1, i] / physics.AU,
+            planet_y[:frame + 1, i] / physics.AU
+        )
 
     planet_dots.set_offsets(
         np.column_stack((
@@ -56,7 +51,7 @@ def update_data(frame):
         ))
     )
 
-    return orbit_line_1, planet_dots, orbit_line_2
+    return orbit_lines + [planet_dots]
 
 def update_energy(frame):
     energy_line.set_data(np.array(times)[:frame + 1] / (physics.DAY_SECONDS * physics.DAYS_PER_YEAR),
@@ -72,7 +67,7 @@ def energy_plot_show():
 
 
 def update_simulation():
-    global animation_1, animation_2, orbit_line_1, planet_dots, orbit_line_2, energy_line
+    global animation_1, animation_2, orbit_lines, planet_dots, energy_line
     global planet_x, planet_y, energies, times
 
     if animation_1 is not None:
@@ -95,19 +90,36 @@ def update_simulation():
     params = star_widget.get_parameters()
     star_mass = params['star_mass'] * physics.SOLAR_MASS
     star_radius = params['star_radius']
+    params = general_widget.get_parameters()
     time_period = params['time_period']
 
+    planet_masses = []
+    planet_position = []
+    planet_velocity = []
+    planet_radii = []
 
+    for i in range(number_of_planets):
+        params = planet_widgets[i].get_parameters()
 
-    params = planet_widget_1.get_parameters()
-    params_2 = planet_widget_2.get_parameters()
+        planet_masses.append(
+            params['planet_mass'] * physics.EARTH_MASS
+        )
 
-    # first of all get the required data from the planets FROM SLIDERS
-    planet_masses = np.array((params['planet_mass'], params_2['planet_mass'])) * physics.EARTH_MASS
+        planet_position.append([
+            params['planet_position'] * physics.AU,
+            0
+        ])
 
-    planet_position = np.array([[params['planet_position'], 0], [params_2['planet_position'],0]], dtype=float) * physics.AU
-    planet_velocity = np.array([[0, params['planet_velocity']], [0, params_2['planet_velocity']]], dtype=float) * 1_000
+        planet_velocity.append([
+            0,
+            params['planet_velocity'] * 1_000
+        ])
 
+        planet_radii.append(params['planet_radius'] ** 2 * 10 )
+
+    planet_masses = np.array(planet_masses)
+    planet_position = np.array(planet_position)
+    planet_velocity = np.array(planet_velocity)
 
     planet_x, planet_y, planet_velocities, times, energies = physics.simulate_orbit(
         time_period,
@@ -119,10 +131,12 @@ def update_simulation():
 
 
     ax1.plot(planet_x/physics.AU, planet_y/physics.AU, alpha=0)
-    #orbit_line, = ax1.plot(planet_x/physics.AU,planet_y/physics.AU,label='Orbit', color='C0')
-    orbit_line_1, = ax1.plot([],[], zorder=1, color='#74C7EC')
-    orbit_line_2, = ax1.plot([],[], zorder=1, color = '#74C7EC') # plot first points
 
+    orbit_lines = []
+
+    for i in range(number_of_planets):
+        line, = ax1.plot([], [], zorder=1, color='#74C7EC')
+        orbit_lines.append(line)
     # Layering from the widest outer glow down to the intense core
     ax1.scatter(
         [0] * 5,
@@ -135,10 +149,7 @@ def update_simulation():
         zorder=4
     )
 
-    planet_dots = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU, label= ['Planetary Body 1'], color = ['#E07A5F','#A6E3A1'], s=[
-        params['planet_radius'] ** 2 * 10,
-        params_2['planet_radius'] ** 2 * 10
-    ],zorder=2)
+    planet_dots = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU, label= ['Planetary Body 1'], s=planet_radii,zorder=2)
 
     ax1.set_xlabel('x position (AU)')
     ax1.set_ylabel('y position (AU)')
@@ -201,36 +212,38 @@ orbit_frame.place(relx=0.3, y = 0, relwidth = 0.7, relheight = 1)
 
 menu_frame.lift()
 
-planet_1_tab = tab_frame.tab('Earth')
-planet_2_tab = tab_frame.tab('Mars')
-
-planet_1_tab.columnconfigure((0, 1), weight=1)
-planet_2_tab.columnconfigure((0,1), weight=1)
-
-planet_widget_1 = widgets.PlanetWidget(
-    planet_1_tab,
-    tabview=tab_frame,
-    tab_name='Earth',
-    fg_color='#64748B'
-)
-planet_widget_1.pack(fill='both',expand=True,padx=10,pady=10)
-planet_widget_2 = widgets.PlanetWidget(
-    planet_2_tab,
-    tabview=tab_frame,
-    tab_name='Mars',
-    defaults={
-        'planet_mass': 0.107,
-        'planet_radius': 0.532,
-        'planet_position': 1.52,
-        'planet_velocity': 24.1
-    },
-    fg_color='#64748B'
-)
-planet_widget_2.pack(fill='both',expand=True,padx=10,pady=10)
-
 star_widget = widgets.StarWidget(menu_frame, fg_color='#64748B')
 star_widget.pack(padx=10,pady=10)
 tab_frame.pack(fill='both',expand=True,padx=10,pady=10)
+general_widget = widgets.GeneralSettings(menu_frame, fg_color='#64748B')
+general_widget.pack(padx=10,pady=10)
+
+planet_names = ['Earth', 'Mars', 'Jupiter', 'Saturn']
+
+number_of_planets = params = int(general_widget.get_parameters()['number_of_planets'])
+
+planet_widgets = []
+
+for i in range(number_of_planets):
+    planet_tab = tab_frame.tab(planet_names[i])
+
+    planet_tab.columnconfigure((0, 1), weight=1)
+
+    planet_widget = widgets.PlanetWidget(
+        planet_tab,
+        tabview=tab_frame,
+        tab_name=planet_names[i],
+        fg_color='#64748B'
+    )
+
+    planet_widget.pack(
+        fill='both',
+        expand=True,
+        padx=10,
+        pady=10
+    )
+
+    planet_widgets.append(planet_widget)
 
 
 
@@ -268,7 +281,8 @@ window.protocol('WM_DELETE_WINDOW', closing)
 window.mainloop()
 
 #Todo
-# change display of GUI
+# Add more planets and then make it a loop
+# Make it so user can choose N number of planets (Slider and entry box)
 # Add validation for impossible/extreme inputs.
 # Make draggable tab class
 # Combine animation Functions?
