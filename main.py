@@ -202,9 +202,8 @@ tab_frame = ctk.CTkTabview(menu_frame, fg_color='#64748B', corner_radius=10, bg_
 orbit_frame = ctk.CTkFrame(window)
 energy_frame = ctk.CTkFrame(window, border_color='#CBD5E1', border_width=1, corner_radius=5, fg_color='#1e1e2e')
 
-tab_frame.add('Earth')
-tab_frame.add('Mars')
-tab_frame.add('Settings')
+
+
 
 background_frame.place(relx = 0, rely = 0, relwidth = 1, relheight = 1)
 menu_frame.place(relx=0.015, rely=0.01, relwidth=0.3, relheight=0.97)
@@ -218,21 +217,72 @@ tab_frame.pack(fill='both',expand=True,padx=10,pady=10)
 general_widget = widgets.GeneralSettings(menu_frame, fg_color='#64748B')
 general_widget.pack(padx=10,pady=10)
 
-planet_names = ['Earth', 'Mars', 'Jupiter', 'Saturn']
+planets_data = [
+    {
+        'name': 'Mercury',
+        'planet_position': 0.39,
+        'planet_velocity': 47.4,
+        'planet_radius': 0.38
+    },
+    {
+        'name': 'Venus',
+        'planet_position': 0.72,
+        'planet_velocity': 35.0,
+        'planet_radius': 0.95
+    },
+    {
+        'name': 'Earth',
+        'planet_position': 1.00,
+        'planet_velocity': 29.8,
+        'planet_radius': 1.00
+    },
+    {
+        'name': 'Mars',
+        'planet_position': 1.52,
+        'planet_velocity': 24.1,
+        'planet_radius': 0.53
+    },
+    {
+        'name': 'Jupiter',
+        'planet_position': 5.20,
+        'planet_velocity': 13.1,
+        'planet_radius': 11.21
+    },
+    {
+        'name': 'Saturn',
+        'planet_position': 9.58,
+        'planet_velocity': 9.7,
+        'planet_radius': 9.45
+    },
+    {
+        'name': 'Uranus',
+        'planet_position': 19.20,
+        'planet_velocity': 6.8,
+        'planet_radius': 4.01
+    },
+    {
+        'name': 'Neptune',
+        'planet_position': 30.05,
+        'planet_velocity': 5.4,
+        'planet_radius': 3.88
+    }
+]
+
 
 number_of_planets = params = int(general_widget.get_parameters()['number_of_planets'])
 
 planet_widgets = []
 
 for i in range(number_of_planets):
-    planet_tab = tab_frame.tab(planet_names[i])
+    tab_frame.add(planets_data[i]['name'])
+    planet_tab = tab_frame.tab(planets_data[i]['name'])
 
     planet_tab.columnconfigure((0, 1), weight=1)
 
     planet_widget = widgets.PlanetWidget(
         planet_tab,
         tabview=tab_frame,
-        tab_name=planet_names[i],
+        tab_name=[planets_data[i]['name']],
         fg_color='#64748B'
     )
 
@@ -245,7 +295,7 @@ for i in range(number_of_planets):
 
     planet_widgets.append(planet_widget)
 
-
+tab_frame.add('Settings')
 
 button_frame = ctk.CTkFrame(menu_frame, fg_color='#64748B')
 button_frame.pack(fill='x',padx=10,pady=10)
