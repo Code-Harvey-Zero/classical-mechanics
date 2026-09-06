@@ -65,10 +65,49 @@ def energy_plot_show():
     else:
         energy_frame.place_forget()
 
+def create_tabs():
+    while len(planet_widgets) < number_of_planets:
+        i = len(planet_widgets)
+        tab_frame.add(planets_data[i]['name'])
+        planet_tab = tab_frame.tab(planets_data[i]['name'])
+
+        planet_tab.columnconfigure((0, 1), weight=1)
+
+        planet_widget = widgets.PlanetWidget(
+            planet_tab,
+            tabview=tab_frame,
+            tab_name=[planets_data[i]['name']],
+            fg_color='#64748B',
+            defaults={
+                'planet_mass': planets_data[i]['planet_mass'],
+                'planet_radius': planets_data[i]['planet_radius'],
+                'planet_position': planets_data[i]['planet_position'],
+                'planet_velocity': planets_data[i]['planet_velocity']
+            }
+        )
+
+        planet_widget.pack(
+            fill='both',
+            expand=True,
+            padx=10,
+            pady=10
+        )
+        planet_widgets.append(planet_widget)
+    while len(planet_widgets) > number_of_planets:
+        i = len(planet_widgets) - 1
+        planet_widget = planet_widgets.pop(i)
+        tab_name = planets_data[i]['name']
+        tab_frame.delete(tab_name)
+        planet_widget.destroy()
+
 
 def update_simulation():
     global animation_1, animation_2, orbit_lines, planet_dots, energy_line
-    global planet_x, planet_y, energies, times
+    global planet_x, planet_y, energies, times, number_of_planets
+
+    number_of_planets = int(
+        general_widget.get_parameters()['number_of_planets']
+    )
 
     if animation_1 is not None:
         if animation_1.event_source is not None:
@@ -86,6 +125,7 @@ def update_simulation():
     except:
         return
 
+    create_tabs()
 
     params = star_widget.get_parameters()
     star_mass = params['star_mass'] * physics.SOLAR_MASS
@@ -115,7 +155,9 @@ def update_simulation():
             params['planet_velocity'] * 1_000
         ])
 
-        planet_radii.append(params['planet_radius'] ** 2 * 10 )
+        planet_radii.append(
+            (params['planet_radius'] ** 0.7 * 4) ** 2
+        )
 
     planet_masses = np.array(planet_masses)
     planet_position = np.array(planet_position)
@@ -287,37 +329,11 @@ planets_data = [
 
 
 
-number_of_planets = params = int(general_widget.get_parameters()['number_of_planets'])
+number_of_planets = int(general_widget.get_parameters()['number_of_planets'])
 
 planet_widgets = []
 
-for i in range(number_of_planets):
-    tab_frame.add(planets_data[i]['name'])
-    planet_tab = tab_frame.tab(planets_data[i]['name'])
-
-    planet_tab.columnconfigure((0, 1), weight=1)
-
-    planet_widget = widgets.PlanetWidget(
-        planet_tab,
-        tabview=tab_frame,
-        tab_name=[planets_data[i]['name']],
-        fg_color='#64748B',
-        defaults = {
-            'planet_mass': planets_data[i]['planet_mass'],
-            'planet_radius': planets_data[i]['planet_radius'],
-            'planet_position': planets_data[i]['planet_position'],
-            'planet_velocity': planets_data[i]['planet_velocity']
-        }
-    )
-
-    planet_widget.pack(
-        fill='both',
-        expand=True,
-        padx=10,
-        pady=10
-    )
-
-    planet_widgets.append(planet_widget)
+create_tabs()
 
 tab_frame.add('Settings')
 

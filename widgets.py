@@ -74,7 +74,7 @@ class Body(ctk.CTkFrame):
 class GeneralSettings(Body):
     variable_configurations = [
         {'name': 'time_period', 'label': 'Time Period (years)', 'min': 1, 'max': 10, 'default': 1, 'step': 100},
-        {'name': 'number_of_planets', 'label': 'Number of Planets', 'min': 1, 'max': 10, 'default': 8, 'step': 10}]
+        {'name': 'number_of_planets', 'label': 'Number of Planets', 'min': 1, 'max': 10, 'default': 8, 'step': 9}]
 
 class StarWidget(Body):
     variable_configurations = [
