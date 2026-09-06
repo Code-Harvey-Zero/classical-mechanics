@@ -148,8 +148,17 @@ def update_simulation():
         label='Central Body',
         zorder=4
     )
-
-    planet_dots = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU, label= ['Planetary Body 1'], s=planet_radii,zorder=2)
+    planet_colors = [
+        '#A6A6A6',  # Mercury
+        '#E8C46A',  # Venus
+        '#4A90E2',  # Earth
+        '#D95F39',  # Mars
+        '#C9A66B',  # Jupiter
+        '#D8C28F',  # Saturn
+        '#67D5D5',  # Uranus
+        '#4169A1'  # Neptune
+    ]
+    planet_dots = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU,color=planet_colors[:number_of_planets], label= ['Planetary Body 1'], s=planet_radii,zorder=2)
 
     ax1.set_xlabel('x position (AU)')
     ax1.set_ylabel('y position (AU)')
@@ -222,51 +231,60 @@ planets_data = [
         'name': 'Mercury',
         'planet_position': 0.39,
         'planet_velocity': 47.4,
-        'planet_radius': 0.38
+        'planet_radius': 0.38,
+        'planet_mass': 0.055
     },
     {
         'name': 'Venus',
         'planet_position': 0.72,
         'planet_velocity': 35.0,
-        'planet_radius': 0.95
+        'planet_radius': 0.95,
+        'planet_mass': 0.815
     },
     {
         'name': 'Earth',
         'planet_position': 1.00,
         'planet_velocity': 29.8,
-        'planet_radius': 1.00
+        'planet_radius': 1.00,
+        'planet_mass': 1.00
     },
     {
         'name': 'Mars',
         'planet_position': 1.52,
         'planet_velocity': 24.1,
-        'planet_radius': 0.53
+        'planet_radius': 0.53,
+        'planet_mass': 0.107
     },
     {
         'name': 'Jupiter',
         'planet_position': 5.20,
         'planet_velocity': 13.1,
-        'planet_radius': 11.21
+        'planet_radius': 11.21,
+        'planet_mass': 317.8
     },
     {
         'name': 'Saturn',
         'planet_position': 9.58,
         'planet_velocity': 9.7,
-        'planet_radius': 9.45
+        'planet_radius': 9.45,
+        'planet_mass': 95.2
     },
     {
         'name': 'Uranus',
         'planet_position': 19.20,
         'planet_velocity': 6.8,
-        'planet_radius': 4.01
+        'planet_radius': 4.01,
+        'planet_mass': 14.5
     },
     {
         'name': 'Neptune',
         'planet_position': 30.05,
         'planet_velocity': 5.4,
-        'planet_radius': 3.88
+        'planet_radius': 3.88,
+        'planet_mass': 17.1
     }
 ]
+
 
 
 number_of_planets = params = int(general_widget.get_parameters()['number_of_planets'])
@@ -283,7 +301,13 @@ for i in range(number_of_planets):
         planet_tab,
         tabview=tab_frame,
         tab_name=[planets_data[i]['name']],
-        fg_color='#64748B'
+        fg_color='#64748B',
+        defaults = {
+            'planet_mass': planets_data[i]['planet_mass'],
+            'planet_radius': planets_data[i]['planet_radius'],
+            'planet_position': planets_data[i]['planet_position'],
+            'planet_velocity': planets_data[i]['planet_velocity']
+        }
     )
 
     planet_widget.pack(
