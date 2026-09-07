@@ -19,12 +19,12 @@ def calculate_acceleration(planet_position, star_mass,planet_masses, radius):
         for j in range(len(planet_masses)):
             if i == j:
                 continue
-            seperation_vector = planet_position[j] - planet_position[i]
-            seperation = np.linalg.norm(seperation_vector)
-            if seperation ==0:
+            separation_vector = planet_position[j] - planet_position[i]
+            separation = np.linalg.norm(separation_vector)
+            if separation ==0:
                 continue
             else:
-                vector_acceleration[i] += (planet_masses[j] * G * seperation_vector) / (seperation**3)
+                vector_acceleration[i] += (planet_masses[j] * G * separation_vector) / (separation**3)
     # now find the negative unit vector of the radius squared in order to find the vector acceleration
 
 
@@ -38,12 +38,12 @@ def calculate_energy(planet_masses, star_mass, radius, planet_velocity, planet_p
     total_energy = kinetic_energy + potential_energy
     for i in range(len(planet_masses)):
         for j in range(i+1, len(planet_masses)):
-            seperation_vector = planet_position[j] - planet_position[i]
-            seperation = np.linalg.norm(seperation_vector)
-            if seperation ==0:
+            separation_vector = planet_position[j] - planet_position[i]
+            separation = np.linalg.norm(separation_vector)
+            if separation ==0:
                 continue
             else:
-                total_energy += -G * planet_masses[i] * planet_masses[j] / seperation
+                total_energy += -G * planet_masses[i] * planet_masses[j] / separation
     return total_energy
 
 
