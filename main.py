@@ -2,21 +2,11 @@ import numpy as np
 
 import physics
 import widgets
-import matplotlib.pyplot as plt
+import plotting
 import tkinter as tk
 import customtkinter as ctk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.animation import FuncAnimation
-from matplotlib.patches import Circle
 
-import catppuccin
-import matplotlib as mpl
 
-animation_1 = None
-animation_2 = None
-orbit_lines = []
-planet_dots = None
-energy_line=None
 planet_x = None
 planet_y = None
 times = None
@@ -36,28 +26,6 @@ def reset():
         body.reset()
 
     update_simulation()
-
-def update_data(frame):
-    for i in range(number_of_planets):
-        orbit_lines[i].set_data(
-            planet_x[:frame + 1, i] / physics.AU,
-            planet_y[:frame + 1, i] / physics.AU
-        )
-
-    planet_dots.set_offsets(
-        np.column_stack((
-            planet_x[frame, :] / physics.AU,
-            planet_y[frame, :] / physics.AU
-        ))
-    )
-
-    return orbit_lines + [planet_dots]
-
-def update_energy(frame):
-    energy_line.set_data(np.array(times)[:frame + 1] / (physics.DAY_SECONDS * physics.DAYS_PER_YEAR),
-        ((np.array(energies)[:frame + 1] - energies[0]) / abs(energies[0]) ) * 100)
-
-    return energy_line,
 
 def energy_plot_show():
     if show_energy.get() == 1:
@@ -100,33 +68,7 @@ def create_tabs():
         tab_frame.delete(tab_name)
         planet_widget.destroy()
 
-
-def update_simulation():
-    global animation_1, animation_2, orbit_lines, planet_dots, energy_line
-    global planet_x, planet_y, energies, times, number_of_planets
-
-    number_of_planets = int(
-        general_widget.get_parameters()['number_of_planets']
-    )
-
-    if animation_1 is not None:
-        if animation_1.event_source is not None:
-            animation_1.event_source.stop()
-        animation_1 = None
-
-    if animation_2 is not None:
-        if animation_2.event_source is not None:
-            animation_2.event_source.stop()
-        animation_2 = None
-
-    try:
-        ax1.clear()
-        ax2.clear()
-    except:
-        return
-
-    create_tabs()
-
+def get_simulation_parameters():
     params = star_widget.get_parameters()
     star_mass = params['star_mass'] * physics.SOLAR_MASS
     star_radius = params['star_radius']
@@ -159,9 +101,20 @@ def update_simulation():
             (params['planet_radius'] ** 0.7 * 4) ** 2
         )
 
-    planet_masses = np.array(planet_masses)
-    planet_position = np.array(planet_position)
-    planet_velocity = np.array(planet_velocity)
+    return (star_mass, star_radius, time_period, np.array(planet_masses), np.array(planet_position),
+            np.array(planet_velocity), planet_radii)
+
+
+def update_simulation():
+    global planet_x, planet_y, energies, times, number_of_planets
+
+    number_of_planets = int(
+        general_widget.get_parameters()['number_of_planets']
+    )
+
+    create_tabs()
+
+    star_mass, star_radius,time_period, planet_masses, planet_position, planet_velocity, planet_radii = get_simulation_parameters()
 
     planet_x, planet_y, planet_velocities, times, energies = physics.simulate_orbit(
         time_period,
@@ -171,68 +124,11 @@ def update_simulation():
         planet_masses
     )
 
-
-    ax1.plot(planet_x/physics.AU, planet_y/physics.AU, alpha=0)
-
-    orbit_lines = []
-
-    for i in range(number_of_planets):
-        line, = ax1.plot([], [], zorder=1, color='#74C7EC')
-        orbit_lines.append(line)
-    # Layering from the widest outer glow down to the intense core
-    ax1.scatter(
-        [0] * 5,
-        [0] * 5,
-        s=np.array([3000, 1600, 700, 240, 60]) * (star_radius**2),
-        color=['red', 'darkorange', 'orange', 'gold', 'white'],
-        alpha=[0.03, 0.08, 0.2, 0.5, 1.0],
-        edgecolors='none',
-        label='Central Body',
-        zorder=4
-    )
-    planet_colors = [
-        '#A6A6A6',  # Mercury
-        '#E8C46A',  # Venus
-        '#4A90E2',  # Earth
-        '#D95F39',  # Mars
-        '#C9A66B',  # Jupiter
-        '#D8C28F',  # Saturn
-        '#67D5D5',  # Uranus
-        '#4169A1'  # Neptune
-    ]
-    planet_dots = ax1.scatter(planet_x[0] / physics.AU, planet_y[0] / physics.AU,color=planet_colors[:number_of_planets], label= ['Planetary Body 1'], s=planet_radii,zorder=2)
-
-    ax1.set_xlabel('x position (AU)')
-    ax1.set_ylabel('y position (AU)')
-    ax1.axis('equal')
-    ax1.set_title('Orbital Path')
-    ax1.legend(loc='upper left')
+    plotter.create_plots(planet_x, planet_y, star_radius,
+                         planet_radii, times, energies)
 
 
-    ax2.plot(
-        np.array(times) / (physics.DAY_SECONDS * physics.DAYS_PER_YEAR),
-        ((np.array(energies) - energies[0]) / abs(energies[0]) ) * 100, alpha=0
-    )
-
-    energy_line, = ax2.plot([0], [0])
-
-    ax2.axhline(0 ,linestyle = 'dashed')
-
-    ax2.set_xlabel('Time (years)')
-    ax2.set_ylabel('Energy Error (%)')
-    ax2.set_title('Energy Percentage Error vs Time')
-
-    orbit_plot.tight_layout()
-    energy_plot.tight_layout()
-
-    orbit_canvas.draw_idle()
-    energy_canvas.draw_idle()
-
-    animation_1 = FuncAnimation(orbit_plot,update_data,frames=len(planet_x),interval=5,blit=True,repeat=False)
-
-    animation_2 = FuncAnimation(energy_plot, update_energy, frames=len(planet_x), interval = 5, blit = True, repeat= False)
-    # Make Tkinter GUI
-mpl.style.use(catppuccin.PALETTE.mocha.identifier)
+# make GUI
 
 window = ctk.CTk()
 
@@ -354,15 +250,7 @@ energy_check_box = ctk.CTkCheckBox(tab_frame.tab('Settings'), text='Show Energy 
 energy_check_box.pack(pady=(40,10))
 
 #set up
-orbit_plot, ax1 = plt.subplots()
-
-energy_plot, ax2 = plt.subplots()
-
-orbit_canvas = FigureCanvasTkAgg(orbit_plot, master = orbit_frame)
-orbit_canvas.get_tk_widget().pack(fill='both', expand=True)
-
-energy_canvas = FigureCanvasTkAgg(energy_plot, master=energy_frame)
-energy_canvas.get_tk_widget().pack(fill='both', expand=True, padx=10, pady=10)
+plotter = plotting.Plotter(orbit_frame, energy_frame)
 
 update_simulation()
 
@@ -371,9 +259,6 @@ window.protocol('WM_DELETE_WINDOW', closing)
 window.mainloop()
 
 #Todo
-# Add more planets and then make it a loop
-# Make it so user can choose N number of planets (Slider and entry box)
 # Add validation for impossible/extreme inputs.
 # Make draggable tab class
-# Combine animation Functions?
 # Change architecture
