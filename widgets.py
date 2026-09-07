@@ -12,6 +12,7 @@ class Body(ctk.CTkFrame):
         self.variables = {}
         self.sliders = {}
         self.create_widgets()
+        self.variable_configurations = {}
 
         Body.all_instances.append(self)
 
@@ -115,7 +116,7 @@ class PlanetWidget(Body):
             self.change_name
         )
 
-    def change_name(self, event=None):
+    def change_name(self):
         new_name = self.planet_name.get().strip()
 
         if not new_name:
