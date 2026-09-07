@@ -52,23 +52,14 @@ def simulate_orbit(time_period, positions, velocities, masses):
     positions = np.array(positions, dtype=float)
     velocities = np.array(velocities, dtype=float)
     masses = np.array(masses, dtype=float)
-    planet_x, planet_y, planet_velocities, times, energies = np.empty((0,len(masses))), np.empty((0,len(masses))), [], [], []
+    planet_x, planet_y, planet_speeds, body_velocities, times, energies = np.empty((0,len(masses))), np.empty((0,len(masses))),[], [], [], []
     dt = DAY_SECONDS / STEPS_PER_DAY
     for i in range(int(time_period * DAYS_PER_YEAR * STEPS_PER_DAY)): # Computes in half days
 
         accelerations = calculate_acceleration(positions,masses)
-        if i % (STEPS_PER_DAY * 100) == 0:
-            mars_distance = np.linalg.norm(positions[4]) / AU
-            print(
-                f"Time: {i / STEPS_PER_DAY:.1f} days, "
-                f"Mars distance: {mars_distance:.3f} AU"
-            )
-        # NOW WE NEED TO FIND THE NEW POSITION AND VELOCITY VECTOR AND MAP THEM INTO VARIABLES AND SPLIT THEM INTO COMPONENT
 
         velocities += 0.5 * accelerations * dt
         positions += velocities * dt
-
-
 
         accelerations = calculate_acceleration(positions, masses)
 
@@ -76,14 +67,14 @@ def simulate_orbit(time_period, positions, velocities, masses):
 
         planet_x = np.append(planet_x, [positions[:, 0]], axis=0)
         planet_y = np.append(planet_y, [positions[:, 1]], axis=0)
-        planet_velocities.append(np.linalg.norm(velocities, axis=1))
+        planet_speeds.append(np.linalg.norm(velocities, axis=1))
+        body_velocities.append(velocities[:, :2].copy())
         times.append((i + 1) * dt)
 
         energy = calculate_energy(masses, positions, velocities)
         energies.append(energy)
 
-
-    return np.array(planet_x), np.array(planet_y), np.array(planet_velocities), np.array(times), np.array(energies)
+    return planet_x, planet_y, np.array(planet_speeds), np.array(body_velocities), np.array(times), np.array(energies)
 
 # Velocity Verlet
 

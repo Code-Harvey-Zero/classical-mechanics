@@ -230,16 +230,14 @@ class Interface:
         (self.time_period, self.masses, self.positions,
          self.velocities, self.radii) = self.get_simulation_parameters()
 
-        print("Mars:", self.positions[4] / physics.AU, self.velocities[4] / 1000)
-
-        self.planet_x, self.planet_y, self.planet_velocities, self.times, self.energies = physics.simulate_orbit(
+        self.planet_x, self.planet_y, self.planet_speeds, self.planet_velocities, self.times, self.energies = physics.simulate_orbit(
             self.time_period,
             self.positions,
             self.velocities,
             self.masses
         )
 
-        self.plotter.create_plots(self.planet_x, self.planet_y,
+        self.plotter.create_plots(self.planet_x, self.planet_y,self.planet_velocities,
                              self.radii, self.times, self.energies)
 
     def energy_plot_show(self):
