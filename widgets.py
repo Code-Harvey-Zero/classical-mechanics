@@ -74,8 +74,8 @@ class Body(ctk.CTkFrame):
 
 class GeneralSettings(Body):
     variable_configurations = [
-        {'name': 'time_period', 'label': 'Time Period (years)', 'min': 1, 'max': 10, 'default': 1, 'step': 100},
-        {'name': 'number_of_planets', 'label': 'Number of Planets', 'min': 1, 'max': 10, 'default': 8, 'step': 9}]
+        {'name': 'time_period', 'label': 'Time Period (years)', 'min': 1, 'max': 165, 'default': 1, 'step': 100},
+        {'name': 'number_of_planets', 'label': 'Number of Planets', 'min': 1, 'max': 30, 'default': 8, 'step': 29}]
 
 class StarWidget(Body):
     variable_configurations = [
@@ -110,13 +110,14 @@ class PlanetWidget(Body):
         super().__init__(master, **kwargs)
 
         self.planet_name = ctk.CTkEntry(self)
+        self.planet_name.insert(0, self.tab_name)
         self.planet_name.grid(row=0, column=0, padx=10, pady=10)
         self.planet_name.bind(
             "<Return>",
             self.change_name
         )
 
-    def change_name(self):
+    def change_name(self, event=None):
         new_name = self.planet_name.get().strip()
 
         if not new_name:

@@ -29,13 +29,13 @@ class Plotter():
 
         self.energy_canvas.get_tk_widget().pack(fill='both', expand=True, padx=10, pady=10)
 
-    def create_plots(self, planet_x, planet_y,
-                     star_radius,planet_radii, times, energies):
+    def create_plots(self, planet_x, planet_y, velocities,radii, times, energies, acceleration):
         self.planet_x = planet_x
         self.planet_y = planet_y
-        self.star_radius = star_radius
-        self.planet_radii = planet_radii
-        self.number_of_planets = len(planet_radii)
+        self.velocities = velocities
+        self.acceleration = acceleration
+        self.radii = radii
+        self.number_of_bodies = len(radii)
         self.times = times
         self.energies = energies
 
@@ -58,21 +58,12 @@ class Plotter():
         self.ax1.plot(self.planet_x/physics.AU, self.planet_y/physics.AU, alpha=0)
 
         self.orbit_lines = []
-        for i in range(self.number_of_planets):
-            line, = self.ax1.plot([], [], zorder=1, color='#74C7EC')
+        for i in range(self.number_of_bodies):
+            line, = self.ax1.plot([], [], zorder=1, color='#74C7EC', alpha =0)
             self.orbit_lines.append(line)
 
-        self.ax1.scatter(
-            [0] * 5,
-            [0] * 5,
-            s=np.array([3000, 1600, 700, 240, 60]) * (self.star_radius**2),
-            color=['red', 'darkorange', 'orange', 'gold', 'white'],
-            alpha=[0.03, 0.08, 0.2, 0.5, 1.0],
-            edgecolors='none',
-            label='Central Body',
-            zorder=4
-        )
         planet_colors = [
+            'orange', # Sun
             '#A6A6A6',  # Mercury
             '#E8C46A',  # Venus
             '#4A90E2',  # Earth
@@ -82,7 +73,31 @@ class Plotter():
             '#67D5D5',  # Uranus
             '#4169A1'  # Neptune
         ]
-        self.planet_dots = self.ax1.scatter(self.planet_x[0] / physics.AU, self.planet_y[0] / physics.AU,color=planet_colors[:self.number_of_planets], label= ['Planetary Body 1'], s=self.planet_radii,zorder=2)
+
+        if self.number_of_bodies > 9:
+            extra_colors = plt.cm.tab20(
+                np.linspace(0, 1, self.number_of_bodies - 9)
+            )
+            planet_colors = planet_colors + list(extra_colors)
+        else:
+            planet_colors = planet_colors[:self.number_of_bodies]
+
+        self.planet_dots = self.ax1.scatter(self.planet_x[0] / physics.AU, self.planet_y[0] / physics.AU,color=planet_colors[:self.number_of_bodies], label='FIX', s=self.radii,zorder=2)
+        self.velocity_vectors = self.ax1.quiver(self.planet_x[0] / physics.AU, self.planet_y[0] / physics.AU,
+                                                self.velocities[0,:,0], self.velocities[0,:,1], color='#F38BA8',
+                                                    scale=5e3,width=0.002,
+                                                    headwidth=2.5,
+                                                    headlength=3,
+                                                    headaxislength=2.5,
+                                                    alpha=0)
+
+        self.acceleration_vectors = self.ax1.quiver(self.planet_x[0] / physics.AU, self.planet_y[0] / physics.AU,
+                                                self.acceleration[0,:,0], self.acceleration[0,:,1], color='#A6E3A1',
+                                                    scale=6,width=0.002,
+                                                    headwidth=2.5,
+                                                    headlength=3,
+                                                    headaxislength=2.5,
+                                                    alpha=0)
 
         self.ax1.set_xlabel('x position (AU)')
         self.ax1.set_ylabel('y position (AU)')
@@ -115,7 +130,7 @@ class Plotter():
         self.animation_2 = FuncAnimation(self.energy_plot, self.update_energy, frames=len(self.planet_x), interval = 5, blit = True, repeat= False)
 
     def update_data(self, frame):
-        for i in range(self.number_of_planets):
+        for i in range(self.number_of_bodies):
             self.orbit_lines[i].set_data(
                 self.planet_x[:frame + 1, i] / physics.AU,
                 self.planet_y[:frame + 1, i] / physics.AU
@@ -127,8 +142,43 @@ class Plotter():
                 self.planet_y[frame, :] / physics.AU
             ))
         )
+        self.velocity_vectors.set_offsets(
+            np.column_stack((
+                self.planet_x[frame, :] / physics.AU,
+                self.planet_y[frame, :] / physics.AU
+            ))
+        )
+        u = self.velocities[frame, :, 0]
+        v = self.velocities[frame, :, 1]
 
-        return self.orbit_lines + [self.planet_dots]
+        speed = np.sqrt(u ** 2 + v ** 2)
+
+        u = u / np.sqrt(speed)
+        v = v / np.sqrt(speed)
+
+        self.velocity_vectors.set_UVC(
+            u, v   # vy
+        )
+
+        self.acceleration_vectors.set_offsets(
+            np.column_stack((
+                self.planet_x[frame, :] / physics.AU,
+                self.planet_y[frame, :] / physics.AU
+            ))
+        )
+        u = self.acceleration[frame, :, 0]
+        v = self.acceleration[frame, :, 1]
+
+        acceleration_mag = np.sqrt(u ** 2 + v ** 2)
+
+        u = u / np.sqrt(acceleration_mag)
+        v = v / np.sqrt(acceleration_mag)
+
+        self.acceleration_vectors.set_UVC(
+            u, v   # vy
+        )
+
+        return self.orbit_lines + [self.planet_dots] + [self.velocity_vectors] + [self.acceleration_vectors]
 
     def update_energy(self, frame):
         self.energy_line.set_data(np.array(self.times)[:frame + 1] / (physics.DAY_SECONDS * physics.DAYS_PER_YEAR),

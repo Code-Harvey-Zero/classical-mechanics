@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 import physics
 import widgets
@@ -105,7 +106,23 @@ class Interface:
         self.show_energy = tk.IntVar()
         self.energy_check_box = ctk.CTkCheckBox(self.tab_frame.tab('Settings'), text='Show Energy Plot',
                                            variable=self.show_energy, onvalue=1, offvalue=0, command=self.energy_plot_show)
-        self.energy_check_box.pack(pady=(40, 10))
+        self.energy_check_box.pack(pady=10, padx=10)
+
+        self.show_orbits = tk.IntVar()
+        self.orbits_check_box = ctk.CTkCheckBox(self.tab_frame.tab('Settings'), text='Show Orbit Lines',
+                                                         variable=self.show_orbits, onvalue=1, offvalue=0,
+                                                         command=self.orbit_trails_show)
+        self.orbits_check_box.pack(pady=10, padx=10)
+
+        self.show_velocity = tk.IntVar()
+        self.velocity_vector_check_box = ctk.CTkCheckBox(self.tab_frame.tab('Settings'), text='Show Velocity Vectors',
+                                           variable=self.show_velocity, onvalue=1, offvalue=0, command=self.velocity_vectors_show)
+        self.velocity_vector_check_box.pack(pady=10, padx=10)
+
+        self.show_acceleration = tk.IntVar()
+        self.acceleration_vector_check_box = ctk.CTkCheckBox(self.tab_frame.tab('Settings'), text='Show Acceleration Vectors',
+                                           variable=self.show_acceleration, onvalue=1, offvalue=0, command=self.acceleration_vectors_show)
+        self.acceleration_vector_check_box.pack(pady=10, padx=10)
 
         self.plotter = plotting.Plotter(self.orbit_frame, self.energy_frame)
 
@@ -119,25 +136,49 @@ class Interface:
         self.window.protocol('WM_DELETE_WINDOW', self.closing)
 
     def create_tabs(self):
+        self.rng = random.SystemRandom()
+
+
         while len(self.planet_widgets) < self.number_of_planets:
             i = len(self.planet_widgets)
-            self.tab_frame.add(self.planets_data[i]['name'])
-            self.planet_tab = self.tab_frame.tab(self.planets_data[i]['name'])
+            if i < len(self.planets_data):
+                self.tab_frame.add(self.planets_data[i]['name'])
+                self.planet_tab = self.tab_frame.tab(self.planets_data[i]['name'])
 
-            self.planet_tab.columnconfigure((0, 1), weight=1)
+                self.planet_tab.columnconfigure((0, 1), weight=1)
 
-            self.planet_widget = widgets.PlanetWidget(
-                self.planet_tab,
-                tabview=self.tab_frame,
-                tab_name=[self.planets_data[i]['name']],
-                fg_color='#64748B',
-                defaults={
-                    'planet_mass': self.planets_data[i]['planet_mass'],
-                    'planet_radius': self.planets_data[i]['planet_radius'],
-                    'planet_position': self.planets_data[i]['planet_position'],
-                    'planet_velocity': self.planets_data[i]['planet_velocity']
-                }
-            )
+                self.planet_widget = widgets.PlanetWidget(
+                    self.planet_tab,
+                    tabview=self.tab_frame,
+                    tab_name=self.planets_data[i]['name'],
+                    fg_color='#64748B',
+                    defaults={
+                        'planet_mass': self.planets_data[i]['planet_mass'],
+                        'planet_radius': self.planets_data[i]['planet_radius'],
+                        'planet_position': self.planets_data[i]['planet_position'],
+                        'planet_velocity': self.planets_data[i]['planet_velocity']
+                    }
+                )
+
+            else:
+                tab_name = f'Planet {i}'
+                self.tab_frame.add(tab_name)
+                self.planet_tab = self.tab_frame.tab(tab_name)
+
+                self.planet_tab.columnconfigure((0, 1), weight=1)
+
+                self.planet_widget = widgets.PlanetWidget(
+                    self.planet_tab,
+                    tabview=self.tab_frame,
+                    tab_name=tab_name,
+                    fg_color='#64748B',
+                    defaults = {
+                        'planet_mass' : self.rng.uniform(1, 500),
+                        'planet_radius' : self.rng.uniform(0.5, 15),
+                        'planet_position' : self.rng.uniform(1, 100),
+                        'planet_velocity' : self.rng.uniform(1, 50)
+                    }
+                )
 
             self.planet_widget.pack(
                 fill='both',
@@ -149,45 +190,54 @@ class Interface:
         while len(self.planet_widgets) > self.number_of_planets:
             i = len(self.planet_widgets) - 1
             self.planet_widget = self.planet_widgets.pop(i)
-            self.tab_name = self.planets_data[i]['name']
+            if i < len(self.planets_data):
+                self.tab_name = self.planets_data[i]['name']
+            else:
+                tab_name = f'Planet {i}'
+                self.tab_name = tab_name
             self.tab_frame.delete(self.tab_name)
             self.planet_widget.destroy()
 
     def get_simulation_parameters(self):
-        self.params = self.star_widget.get_parameters()
-        self.star_mass = self.params['star_mass'] * physics.SOLAR_MASS
-        self.star_radius = self.params['star_radius']
-        self.params = self.general_widget.get_parameters()
-        self.time_period = self.params['time_period']
 
-        self.planet_masses = []
-        self.planet_position = []
-        self.planet_velocity = []
-        self.planet_radii = []
+
+        self.masses = []
+        self.positions = []
+        self.velocities = []
+        self.radii = []
+
+        self.params = self.star_widget.get_parameters()
+        self.masses.append(self.params['star_mass'] * physics.SOLAR_MASS)
+        self.positions.append([0,0])
+        self.velocities.append([0,0])
+        self.radii.append(self.params['star_radius'] ** 2 * 30)
 
         for i in range(self.number_of_planets):
             self.params = self.planet_widgets[i].get_parameters()
 
-            self.planet_masses.append(
+            self.masses.append(
                 self.params['planet_mass'] * physics.EARTH_MASS
             )
 
-            self.planet_position.append([
+            self.positions.append([
                 self.params['planet_position'] * physics.AU,
                 0
             ])
 
-            self.planet_velocity.append([
+            self.velocities.append([
                 0,
                 self.params['planet_velocity'] * 1_000
             ])
 
-            self.planet_radii.append(
+            self.radii.append(
                 (self.params['planet_radius'] ** 0.7 * 4) ** 2
             )
 
-        return (self.star_mass, self.star_radius, self.time_period, np.array(self.planet_masses), np.array(self.planet_position),
-                np.array(self.planet_velocity), self.planet_radii)
+        self.params = self.general_widget.get_parameters()
+        self.time_period = self.params['time_period']
+
+        return (self.time_period, np.array(self.masses), np.array(self.positions),
+                np.array(self.velocities), self.radii)
 
     def update_simulation(self):
 
@@ -197,25 +247,45 @@ class Interface:
 
         self.create_tabs()
 
-        (self.star_mass, self.star_radius, self.time_period, self.planet_masses, self.planet_position,
-         self.planet_velocity, self.planet_radii) = self.get_simulation_parameters()
+        (self.time_period, self.masses, self.positions,
+         self.velocities, self.radii) = self.get_simulation_parameters()
 
-        self.planet_x, self.planet_y, self.planet_velocities, self.times, self.energies = physics.simulate_orbit(
+        self.planet_x, self.planet_y, self.planet_speeds, self.planet_velocities, self.times, self.energies, self.accelerations = physics.simulate_orbit(
             self.time_period,
-            self.planet_position,
-            self.planet_velocity,
-            self.star_mass,
-            self.planet_masses
+            self.positions,
+            self.velocities,
+            self.masses
         )
 
-        self.plotter.create_plots(self.planet_x, self.planet_y, self.star_radius,
-                             self.planet_radii, self.times, self.energies)
+        self.plotter.create_plots(self.planet_x, self.planet_y,self.planet_velocities,
+                             self.radii, self.times, self.energies, self.accelerations)
 
     def energy_plot_show(self):
         if self.show_energy.get() == 1:
             self.energy_frame.place(relx=0.75, rely=-0.00, relwidth=0.25, relheight=0.26)
         else:
             self.energy_frame.place_forget()
+
+    def orbit_trails_show(self):
+        if self.show_orbits.get()==1:
+            for i in range(self.plotter.number_of_bodies):
+                self.plotter.orbit_lines[i].set_alpha(1)
+
+        else:
+            for i in range(self.plotter.number_of_bodies):
+                self.plotter.orbit_lines[i].set_alpha(0)
+
+    def velocity_vectors_show(self):
+        if self.show_velocity.get() == 1:
+            self.plotter.velocity_vectors.set_alpha(1)
+        else:
+            self.plotter.velocity_vectors.set_alpha(0)
+
+    def acceleration_vectors_show(self):
+        if self.show_acceleration.get() == 1:
+            self.plotter.acceleration_vectors.set_alpha(1)
+        else:
+            self.plotter.acceleration_vectors.set_alpha(0)
 
     def reset(self):
         for body in widgets.Body.all_instances:
