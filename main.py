@@ -4,9 +4,9 @@ app = gui.Interface()
 app.start()
 
 #Todo
-# add milky way button to reset to milky way
-# in settings add (show orbital trails, show planet names, show velocity vectors, animation speed)
+# in settings add (show planet names, animation speed)
 # add collisions
+# make creation of planets truly random
 # Add validation for impossible/extreme inputs.
 # Make draggable tab class
 # Add different simulation presets

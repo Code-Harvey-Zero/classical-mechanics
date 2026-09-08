@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 import physics
 import widgets
@@ -105,7 +106,23 @@ class Interface:
         self.show_energy = tk.IntVar()
         self.energy_check_box = ctk.CTkCheckBox(self.tab_frame.tab('Settings'), text='Show Energy Plot',
                                            variable=self.show_energy, onvalue=1, offvalue=0, command=self.energy_plot_show)
-        self.energy_check_box.pack(pady=(40, 10))
+        self.energy_check_box.pack(pady=10, padx=10)
+
+        self.show_orbits = tk.IntVar()
+        self.orbits_check_box = ctk.CTkCheckBox(self.tab_frame.tab('Settings'), text='Show Orbit Lines',
+                                                         variable=self.show_orbits, onvalue=1, offvalue=0,
+                                                         command=self.orbit_trails_show)
+        self.orbits_check_box.pack(pady=10, padx=10)
+
+        self.show_velocity = tk.IntVar()
+        self.velocity_vector_check_box = ctk.CTkCheckBox(self.tab_frame.tab('Settings'), text='Show Velocity Vectors',
+                                           variable=self.show_velocity, onvalue=1, offvalue=0, command=self.velocity_vectors_show)
+        self.velocity_vector_check_box.pack(pady=10, padx=10)
+
+        self.show_acceleration = tk.IntVar()
+        self.acceleration_vector_check_box = ctk.CTkCheckBox(self.tab_frame.tab('Settings'), text='Show Acceleration Vectors',
+                                           variable=self.show_acceleration, onvalue=1, offvalue=0, command=self.acceleration_vectors_show)
+        self.acceleration_vector_check_box.pack(pady=10, padx=10)
 
         self.plotter = plotting.Plotter(self.orbit_frame, self.energy_frame)
 
@@ -119,6 +136,9 @@ class Interface:
         self.window.protocol('WM_DELETE_WINDOW', self.closing)
 
     def create_tabs(self):
+        self.rng = random.SystemRandom()
+
+
         while len(self.planet_widgets) < self.number_of_planets:
             i = len(self.planet_widgets)
             if i < len(self.planets_data):
@@ -130,7 +150,7 @@ class Interface:
                 self.planet_widget = widgets.PlanetWidget(
                     self.planet_tab,
                     tabview=self.tab_frame,
-                    tab_name=[self.planets_data[i]['name']],
+                    tab_name=self.planets_data[i]['name'],
                     fg_color='#64748B',
                     defaults={
                         'planet_mass': self.planets_data[i]['planet_mass'],
@@ -153,10 +173,10 @@ class Interface:
                     tab_name=tab_name,
                     fg_color='#64748B',
                     defaults = {
-                        'planet_mass': self.planets_data[7]['planet_mass']*1.1,
-                        'planet_radius': self.planets_data[7]['planet_radius']*1.1,
-                        'planet_position': self.planets_data[7]['planet_position'] * 1.1,
-                        'planet_velocity': self.planets_data[7]['planet_velocity']*1.1,
+                        'planet_mass' : self.rng.uniform(1, 500),
+                        'planet_radius' : self.rng.uniform(0.5, 15),
+                        'planet_position' : self.rng.uniform(1, 100),
+                        'planet_velocity' : self.rng.uniform(1, 50)
                     }
                 )
 
@@ -230,7 +250,7 @@ class Interface:
         (self.time_period, self.masses, self.positions,
          self.velocities, self.radii) = self.get_simulation_parameters()
 
-        self.planet_x, self.planet_y, self.planet_speeds, self.planet_velocities, self.times, self.energies = physics.simulate_orbit(
+        self.planet_x, self.planet_y, self.planet_speeds, self.planet_velocities, self.times, self.energies, self.accelerations = physics.simulate_orbit(
             self.time_period,
             self.positions,
             self.velocities,
@@ -238,13 +258,34 @@ class Interface:
         )
 
         self.plotter.create_plots(self.planet_x, self.planet_y,self.planet_velocities,
-                             self.radii, self.times, self.energies)
+                             self.radii, self.times, self.energies, self.accelerations)
 
     def energy_plot_show(self):
         if self.show_energy.get() == 1:
             self.energy_frame.place(relx=0.75, rely=-0.00, relwidth=0.25, relheight=0.26)
         else:
             self.energy_frame.place_forget()
+
+    def orbit_trails_show(self):
+        if self.show_orbits.get()==1:
+            for i in range(self.plotter.number_of_bodies):
+                self.plotter.orbit_lines[i].set_alpha(1)
+
+        else:
+            for i in range(self.plotter.number_of_bodies):
+                self.plotter.orbit_lines[i].set_alpha(0)
+
+    def velocity_vectors_show(self):
+        if self.show_velocity.get() == 1:
+            self.plotter.velocity_vectors.set_alpha(1)
+        else:
+            self.plotter.velocity_vectors.set_alpha(0)
+
+    def acceleration_vectors_show(self):
+        if self.show_acceleration.get() == 1:
+            self.plotter.acceleration_vectors.set_alpha(1)
+        else:
+            self.plotter.acceleration_vectors.set_alpha(0)
 
     def reset(self):
         for body in widgets.Body.all_instances:

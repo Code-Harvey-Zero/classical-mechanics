@@ -13,6 +13,7 @@ EARTH_MASS = 5.9722e24
 def calculate_acceleration(positions,masses):
     separation = positions[None, :, :] - positions[:, None, :]
     distance = np.linalg.norm(separation, axis=2)
+    distance[distance == 0] = np.inf
     np.fill_diagonal(distance, np.inf)
     vector_acceleration = (
             G
@@ -34,8 +35,7 @@ def calculate_energy(masses, positions, velocities):
 
     separation = positions[None, :, :] - positions[:, None, :]
     distance = np.linalg.norm(separation, axis=2)
-
-    np.fill_diagonal(distance, np.inf)
+    distance[distance == 0] = np.inf
 
     potential = -G * masses[:, None] * masses[None, :] / distance
 
@@ -52,6 +52,7 @@ def simulate_orbit(time_period, positions, velocities, masses):
     positions = np.array(positions, dtype=float)
     velocities = np.array(velocities, dtype=float)
     masses = np.array(masses, dtype=float)
+    body_accelerations = []
     planet_x, planet_y, planet_speeds, body_velocities, times, energies = np.empty((0,len(masses))), np.empty((0,len(masses))),[], [], [], []
     dt = DAY_SECONDS / STEPS_PER_DAY
     for i in range(int(time_period * DAYS_PER_YEAR * STEPS_PER_DAY)): # Computes in half days
@@ -69,12 +70,13 @@ def simulate_orbit(time_period, positions, velocities, masses):
         planet_y = np.append(planet_y, [positions[:, 1]], axis=0)
         planet_speeds.append(np.linalg.norm(velocities, axis=1))
         body_velocities.append(velocities[:, :2].copy())
+        body_accelerations.append(accelerations[:,:2].copy())
         times.append((i + 1) * dt)
 
         energy = calculate_energy(masses, positions, velocities)
         energies.append(energy)
 
-    return planet_x, planet_y, np.array(planet_speeds), np.array(body_velocities), np.array(times), np.array(energies)
+    return planet_x, planet_y, np.array(planet_speeds), np.array(body_velocities), np.array(times), np.array(energies), np.array(body_accelerations)
 
 # Velocity Verlet
 
